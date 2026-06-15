@@ -9,6 +9,7 @@ import {
   trimNumber,
   friendly,
   minNote,
+  friendlyPackLabel,
 } from './format.js'
 
 describe('roundUpToWhole', () => {
@@ -116,5 +117,27 @@ describe('minNote', () => {
   it('switches units the same way friendly does', () => {
     expect(minNote(1000, 'ml')).toBe('(min 1 L)')
     expect(minNote(1500, 'g')).toBe('(min 1.5 kg)')
+  })
+})
+
+describe('friendlyPackLabel', () => {
+  it('humanises a gram pack size, switching to kg above 1000 g', () => {
+    expect(friendlyPackLabel(500, 'g')).toBe('500 g')
+    expect(friendlyPackLabel(400, 'g')).toBe('400 g')
+    expect(friendlyPackLabel(1500, 'g')).toBe('1.5 kg')
+    expect(friendlyPackLabel(1000, 'g')).toBe('1 kg')
+  })
+
+  it('humanises a millilitre pack size, switching to L above 1000 ml', () => {
+    expect(friendlyPackLabel(330, 'ml')).toBe('330 ml')
+    expect(friendlyPackLabel(1000, 'ml')).toBe('1 L')
+  })
+
+  it('renders a count pack size as a whole number with no unit', () => {
+    expect(friendlyPackLabel(6, 'count')).toBe('6')
+  })
+
+  it('falls back to a bare number for an unknown unit', () => {
+    expect(friendlyPackLabel(3, 'sachet')).toBe('3')
   })
 })

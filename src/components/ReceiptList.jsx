@@ -99,6 +99,13 @@ export function ReceiptItem({ item, checked, onToggle }) {
         </span>
       </label>
 
+      {item.pack && (
+        <p className="larder-receipt__pack">
+          buy {item.pack.buyLabel}
+          {item.pack.spare ? ` · ${item.pack.spare}` : ''}
+        </p>
+      )}
+
       {meals.length > 0 && (
         <div className="larder-receipt__detail">
           <button

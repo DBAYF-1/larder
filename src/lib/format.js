@@ -104,6 +104,38 @@ export function friendly(value, baseUnit, displayRules = {}) {
 }
 
 /**
+ * Build a human label for a single pack when the ingredient carries no explicit
+ * `label`. British English; mirrors `friendly` unit switching so a pack reads
+ * like the quantities elsewhere on the receipt.
+ *
+ *   friendlyPackLabel(500, 'g')   -> "500 g"
+ *   friendlyPackLabel(1000, 'ml') -> "1 L"
+ *   friendlyPackLabel(6, 'count') -> "6"
+ *
+ * This is a last-resort label: the pack contract prefers an explicit
+ * pack.label ("500 g bag", "box of 6") and only falls back here when none is
+ * supplied. We keep it deliberately plain — just the humanised size — rather
+ * than guessing a container noun ("bag"/"tin") we cannot know.
+ *
+ * @param {number} size              pack size in the ingredient's base unit
+ * @param {'g'|'ml'|'count'|string|null} unit
+ * @returns {string}
+ */
+export function friendlyPackLabel(size, unit) {
+  if (unit === 'count') {
+    return String(roundUpToWhole(size))
+  }
+  if (unit === 'g') {
+    return size >= 1000 ? `${trimNumber(size / 1000)} kg` : `${trimNumber(size)} g`
+  }
+  if (unit === 'ml') {
+    return size >= 1000 ? `${trimNumber(size / 1000)} L` : `${trimNumber(size)} ml`
+  }
+  // Unknown unit — show the bare number rather than fabricate a unit suffix.
+  return trimNumber(size)
+}
+
+/**
  * Build the "(min …)" bump note appended when a needed quantity was raised to a
  * minimum purchase. British English; mirrors `friendly` unit switching so the
  * note reads consistently with the quantity.

@@ -158,6 +158,20 @@
   font-style: italic;
 }
 
+/* ── Pack-rounding fine print ──────────────────────────────────────────── */
+/* Quiet till-receipt aside: "buy 2 × 400 g tin · 300 g spare". Mono register,
+   muted slate, aligned under the name past the checkbox + gutter. */
+.larder-receipt__pack {
+  padding-inline-start: calc(1.25rem + var(--sp-3));
+  margin-top: var(--sp-1);
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum' 1;
+  font-size: var(--fs-micro);
+  color: var(--larder-slate);
+  line-height: var(--lh-tight);
+}
+
 /* ── "Needed for" detail ───────────────────────────────────────────────── */
 .larder-receipt__detail {
   padding-inline-start: calc(1.25rem + var(--sp-3));

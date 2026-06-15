@@ -1,0 +1,1924 @@
+{
+  "ginger": {
+    "canonicalName": "Ginger",
+    "suggestedSize": 160,
+    "unit": "g",
+    "offBarcode": "5013683305466",
+    "brand": "Cauldron Express",
+    "productName": "Garlic & Ginger Marinated Tofu",
+    "samples": 12
+  },
+  "potato": {
+    "canonicalName": "Potato",
+    "error": "HTTP 503"
+  },
+  "sweet-potato": {
+    "canonicalName": "Sweet potato",
+    "error": "HTTP 503"
+  },
+  "mushroom": {
+    "canonicalName": "Mushroom",
+    "error": "HTTP 503"
+  },
+  "broccoli": {
+    "canonicalName": "Broccoli",
+    "suggestedSize": 400,
+    "unit": "g",
+    "offBarcode": "5012427212404",
+    "brand": "Baxters",
+    "productName": "Super Good Pea, Broccoli and Basil Pesto",
+    "samples": 12
+  },
+  "spinach": {
+    "canonicalName": "Spinach",
+    "error": "HTTP 503"
+  },
+  "peas": {
+    "canonicalName": "Peas",
+    "error": "HTTP 503"
+  },
+  "sweetcorn": {
+    "canonicalName": "Sweetcorn",
+    "error": "HTTP 503"
+  },
+  "green-beans": {
+    "canonicalName": "Green beans",
+    "suggestedSize": 410,
+    "unit": "g",
+    "offBarcode": "5000232902450",
+    "brand": "Branston",
+    "productName": "Baked Beans in a Rich, Thick, Tomatoey Sauce",
+    "samples": 12
+  },
+  "beetroot": {
+    "canonicalName": "Beetroot",
+    "error": "HTTP 503"
+  },
+  "pumpkin": {
+    "canonicalName": "Pumpkin",
+    "error": "HTTP 503"
+  },
+  "rocket": {
+    "canonicalName": "Rocket",
+    "suggestedSize": 319,
+    "unit": "g",
+    "offBarcode": "5035272145024",
+    "brand": "Raku",
+    "productName": "Vegan Super Selection",
+    "samples": 12
+  },
+  "mangetout": {
+    "canonicalName": "Mangetout",
+    "suggestedSize": 200,
+    "unit": "g",
+    "offBarcode": "03328477",
+    "brand": "Tesco",
+    "productName": "Tesco Tenderstem Broccoli and Mangetout stir fry",
+    "samples": 12
+  },
+  "coriander": {
+    "canonicalName": "Coriander",
+    "error": "HTTP 503"
+  },
+  "parsley": {
+    "canonicalName": "Parsley",
+    "error": "HTTP 503"
+  },
+  "basil": {
+    "canonicalName": "Basil",
+    "error": "HTTP 503"
+  },
+  "mint": {
+    "canonicalName": "Mint",
+    "suggestedSize": 100,
+    "unit": "g",
+    "offBarcode": "3046920028417",
+    "brand": "Lindt Excellence",
+    "productName": "Mint Intense Dark Chocolate",
+    "samples": 12
+  },
+  "chicken-breast": {
+    "canonicalName": "Chicken breast",
+    "error": "HTTP 503"
+  },
+  "chicken-thigh": {
+    "canonicalName": "Chicken thigh",
+    "error": "HTTP 503"
+  },
+  "whole-chicken": {
+    "canonicalName": "Whole chicken",
+    "error": "HTTP 503"
+  },
+  "minced-beef": {
+    "canonicalName": "Minced beef",
+    "error": "HTTP 503"
+  },
+  "minced-lamb": {
+    "canonicalName": "Minced lamb",
+    "error": "HTTP 503"
+  },
+  "minced-pork": {
+    "canonicalName": "Minced pork",
+    "error": "HTTP 503"
+  },
+  "beef-steak": {
+    "canonicalName": "Beef steak",
+    "error": "HTTP 503"
+  },
+  "ham": {
+    "canonicalName": "Ham",
+    "error": "HTTP 503"
+  },
+  "tuna": {
+    "canonicalName": "Tuna",
+    "error": "HTTP 503"
+  },
+  "prawns": {
+    "canonicalName": "Prawns",
+    "error": "HTTP 503"
+  },
+  "milk": {
+    "canonicalName": "Milk",
+    "error": "HTTP 503"
+  },
+  "butter": {
+    "canonicalName": "Butter",
+    "error": "HTTP 503"
+  },
+  "cheddar-cheese": {
+    "canonicalName": "Cheddar cheese",
+    "suggestedSize": 350,
+    "unit": "g",
+    "offBarcode": "5000295142893",
+    "brand": "Cathedral City",
+    "productName": "Our Mature Cheddar",
+    "samples": 12
+  },
+  "parmesan": {
+    "canonicalName": "Parmesan",
+    "error": "HTTP 503"
+  },
+  "mozzarella": {
+    "canonicalName": "Mozzarella",
+    "suggestedSize": 250,
+    "unit": "g",
+    "offBarcode": "8000430135268",
+    "brand": "Galbani",
+    "productName": "Galbani mozzarella - maxi 250g",
+    "samples": 12
+  },
+  "double-cream": {
+    "canonicalName": "Double cream",
+    "error": "HTTP 503"
+  },
+  "soured-cream": {
+    "canonicalName": "Soured cream",
+    "suggestedSize": 300,
+    "unit": "ml",
+    "offBarcode": "5052003444355",
+    "brand": "Tesco",
+    "productName": "Soured cream",
+    "samples": 12
+  },
+  "natural-yoghurt": {
+    "canonicalName": "Natural yoghurt",
+    "suggestedSize": 500,
+    "unit": "g",
+    "offBarcode": "4088600266008",
+    "brand": "Aldi",
+    "productName": "Greek style natural yoghurt",
+    "samples": 12
+  },
+  "buttermilk": {
+    "canonicalName": "Buttermilk",
+    "suggestedSize": 500,
+    "unit": "ml",
+    "offBarcode": "8906041150501",
+    "brand": "Katraj Dairy",
+    "productName": "Pasteurised Buttermilk",
+    "samples": 12
+  },
+  "cream-cheese": {
+    "canonicalName": "Cream cheese",
+    "error": "HTTP 503"
+  },
+  "chopped-tomatoes": {
+    "canonicalName": "Chopped tomatoes",
+    "error": "HTTP 503"
+  },
+  "passata": {
+    "canonicalName": "Passata",
+    "suggestedSize": 500,
+    "unit": "g",
+    "offBarcode": "20522605",
+    "brand": "Baresa",
+    "productName": "Tomato Passata",
+    "samples": 12
+  },
+  "chickpeas": {
+    "canonicalName": "Chickpeas",
+    "suggestedSize": 400,
+    "unit": "g",
+    "offBarcode": "5051399182506",
+    "brand": "TESCO",
+    "productName": "CHICKPEAS IN WATER",
+    "samples": 12
+  },
+  "kidney-beans": {
+    "canonicalName": "Kidney beans",
+    "suggestedSize": 400,
+    "unit": "g",
+    "offBarcode": "01162615",
+    "brand": "Sainsbury's",
+    "productName": "Red Kidney Beans in water",
+    "samples": 12
+  },
+  "black-beans": {
+    "canonicalName": "Black beans",
+    "error": "HTTP 503"
+  },
+  "cannellini-beans": {
+    "canonicalName": "Cannellini beans",
+    "error": "HTTP 503"
+  },
+  "coconut-milk": {
+    "canonicalName": "Coconut milk",
+    "error": "HTTP 503"
+  },
+  "olives": {
+    "canonicalName": "Olives",
+    "error": "HTTP 503"
+  },
+  "plain-flour": {
+    "canonicalName": "Plain flour",
+    "error": "HTTP 503"
+  },
+  "self-raising-flour": {
+    "canonicalName": "Self-raising flour",
+    "error": "HTTP 503"
+  },
+  "wholemeal-flour": {
+    "canonicalName": "Wholemeal flour",
+    "error": "HTTP 503"
+  },
+  "caster-sugar": {
+    "canonicalName": "Caster sugar",
+    "suggestedSize": 1000,
+    "unit": "g",
+    "offBarcode": "5010067331509",
+    "brand": "Silver spoon",
+    "productName": "Sugar",
+    "samples": 12
+  },
+  "granulated-sugar": {
+    "canonicalName": "Granulated sugar",
+    "error": "HTTP 503"
+  },
+  "brown-sugar": {
+    "canonicalName": "Brown sugar",
+    "error": "HTTP 503"
+  },
+  "icing-sugar": {
+    "canonicalName": "Icing sugar",
+    "error": "HTTP 503"
+  },
+  "yeast": {
+    "canonicalName": "Yeast",
+    "error": "HTTP 503"
+  },
+  "rice": {
+    "canonicalName": "Rice",
+    "error": "HTTP 503"
+  },
+  "basmati-rice": {
+    "canonicalName": "Basmati rice",
+    "suggestedSize": 250,
+    "unit": "g",
+    "offBarcode": "5011157888101",
+    "brand": "Tilda",
+    "productName": "PURE BASMATI RICE",
+    "samples": 12
+  },
+  "pasta": {
+    "canonicalName": "Pasta",
+    "error": "HTTP 503"
+  },
+  "spaghetti": {
+    "canonicalName": "Spaghetti",
+    "suggestedSize": 500,
+    "unit": "g",
+    "offBarcode": "8076800195057",
+    "brand": "Barilla",
+    "productName": "Spaghetti N° 5",
+    "samples": 12
+  },
+  "noodles": {
+    "canonicalName": "Noodles",
+    "error": "HTTP 503"
+  },
+  "couscous": {
+    "canonicalName": "Couscous",
+    "error": "HTTP 503"
+  },
+  "oats": {
+    "canonicalName": "Oats",
+    "suggestedSize": 1000,
+    "unit": "g",
+    "offBarcode": "5099801003339",
+    "brand": "Flahavan's",
+    "productName": "Organic Jumbo Oats",
+    "samples": 12
+  },
+  "breadcrumbs": {
+    "canonicalName": "Breadcrumbs",
+    "error": "HTTP 503"
+  },
+  "lentils": {
+    "canonicalName": "Lentils",
+    "suggestedSize": 250,
+    "unit": "g",
+    "offBarcode": "5018095011271",
+    "brand": "Merchant Gourmet",
+    "productName": "Puy Lentils & French green lentils",
+    "samples": 12
+  },
+  "plain-chocolate": {
+    "canonicalName": "Plain chocolate",
+    "error": "HTTP 503"
+  },
+  "cocoa-powder": {
+    "canonicalName": "Cocoa powder",
+    "suggestedSize": 250,
+    "unit": "g",
+    "offBarcode": "4056489232872",
+    "brand": "Belbake",
+    "productName": "CACAO",
+    "samples": 12
+  },
+  "golden-syrup": {
+    "canonicalName": "Golden syrup",
+    "error": "HTTP 503"
+  },
+  "peanut-butter": {
+    "canonicalName": "Peanut butter",
+    "suggestedSize": 1000,
+    "unit": "g",
+    "offBarcode": "5060367180758",
+    "brand": "Pip & Nut",
+    "productName": "Crunchy Peanut Butter",
+    "samples": 12
+  },
+  "desiccated-coconut": {
+    "canonicalName": "Desiccated coconut",
+    "error": "HTTP 503"
+  },
+  "sultanas": {
+    "canonicalName": "Sultanas",
+    "error": "HTTP 503"
+  },
+  "mayonnaise": {
+    "canonicalName": "Mayonnaise",
+    "error": "HTTP 503"
+  },
+  "almonds": {
+    "canonicalName": "Almonds",
+    "suggestedSize": 100,
+    "unit": "g",
+    "offBarcode": "7614500010013",
+    "brand": "Toblerone",
+    "productName": "toblerone",
+    "samples": 12
+  },
+  "walnuts": {
+    "canonicalName": "Walnuts",
+    "error": "HTTP 503"
+  },
+  "cashews": {
+    "canonicalName": "Cashews",
+    "suggestedSize": 200,
+    "unit": "g",
+    "offBarcode": "20267605",
+    "brand": "Alesto",
+    "productName": "Anacardo/Castanha-de-caju natural",
+    "samples": 12
+  },
+  "white-wine": {
+    "canonicalName": "White wine",
+    "error": "HTTP 503"
+  },
+  "red-wine": {
+    "canonicalName": "Red wine",
+    "error": "HTTP 503"
+  },
+  "arabic-rice": {
+    "canonicalName": "Arabic rice",
+    "suggestedSize": null,
+    "unit": "g",
+    "offBarcode": null,
+    "samples": 0
+  },
+  "brown-rice": {
+    "canonicalName": "Brown rice",
+    "error": "HTTP 503"
+  },
+  "pudding-rice": {
+    "canonicalName": "Pudding rice",
+    "suggestedSize": 400,
+    "unit": "g",
+    "offBarcode": "5000354800931",
+    "brand": "Ambrosia",
+    "productName": "Rice Pudding",
+    "samples": 12
+  },
+  "dried-white-corn": {
+    "canonicalName": "Dried white corn",
+    "error": "HTTP 503"
+  },
+  "buckwheat": {
+    "canonicalName": "Buckwheat",
+    "error": "HTTP 503"
+  },
+  "bulgur-wheat": {
+    "canonicalName": "Bulgur wheat",
+    "error": "HTTP 503"
+  },
+  "freekeh": {
+    "canonicalName": "Freekeh",
+    "error": "HTTP 503"
+  },
+  "grits": {
+    "canonicalName": "Grits",
+    "suggestedSize": null,
+    "unit": "g",
+    "offBarcode": null,
+    "samples": 0
+  },
+  "grape-nuts-cereal": {
+    "canonicalName": "Grape Nuts cereal",
+    "suggestedSize": null,
+    "unit": "g",
+    "offBarcode": null,
+    "samples": 0
+  },
+  "strong-white-bread-flour": {
+    "canonicalName": "Strong white bread flour",
+    "error": "HTTP 503"
+  },
+  "gram-flour": {
+    "canonicalName": "Gram flour",
+    "error": "HTTP 503"
+  },
+  "cornmeal": {
+    "canonicalName": "Cornmeal",
+    "error": "HTTP 503"
+  },
+  "casabe": {
+    "canonicalName": "Casabe",
+    "suggestedSize": null,
+    "unit": "g",
+    "offBarcode": null,
+    "samples": 0
+  },
+  "farfalle": {
+    "canonicalName": "Farfalle",
+    "suggestedSize": 500,
+    "unit": "g",
+    "offBarcode": "5000119300102",
+    "brand": "TESCO",
+    "productName": "Farfalle",
+    "samples": 12
+  },
+  "linguine": {
+    "canonicalName": "Linguine",
+    "suggestedSize": 500,
+    "unit": "g",
+    "offBarcode": "8076809523509",
+    "brand": "Barilla",
+    "productName": "Pâtes linguine collezione 500g",
+    "samples": 12
+  },
+  "brown-rice-noodles": {
+    "canonicalName": "Brown rice noodles",
+    "suggestedSize": 200,
+    "unit": "g",
+    "offBarcode": "4088600168784",
+    "brand": "Asia Specialities",
+    "productName": "Folded brown rice noodles",
+    "samples": 8
+  },
+  "filo-pastry": {
+    "canonicalName": "Filo pastry",
+    "error": "HTTP 503"
+  },
+  "falafel-mix": {
+    "canonicalName": "Falafel mix",
+    "error": "HTTP 503"
+  },
+  "digestive-biscuits": {
+    "canonicalName": "Digestive biscuits",
+    "error": "HTTP 503"
+  },
+  "graham-cracker-crumbs": {
+    "canonicalName": "Graham cracker crumbs",
+    "error": "HTTP 503"
+  },
+  "black-treacle": {
+    "canonicalName": "Black treacle",
+    "suggestedSize": 454,
+    "unit": "g",
+    "offBarcode": "5010115902064",
+    "brand": "Lyle's",
+    "productName": "Black Treacle",
+    "samples": 9
+  },
+  "muscovado-sugar": {
+    "canonicalName": "Muscovado sugar",
+    "suggestedSize": 500,
+    "unit": "g",
+    "offBarcode": "5010651001214",
+    "brand": "Billington's",
+    "productName": "Light Muscavado Sugar",
+    "samples": 6
+  },
+  "coconut-sugar": {
+    "canonicalName": "Coconut sugar",
+    "suggestedSize": 350,
+    "unit": "g",
+    "offBarcode": "0680569854124",
+    "brand": "The Coconut Collab",
+    "productName": "Fermented Coconut Yoghurt Alternative",
+    "samples": 12
+  },
+  "pearl-sugar": {
+    "canonicalName": "Pearl sugar",
+    "error": "HTTP 503"
+  },
+  "candied-peel": {
+    "canonicalName": "Candied peel",
+    "error": "HTTP 503"
+  },
+  "ground-poppy-seeds": {
+    "canonicalName": "Ground poppy seeds",
+    "error": "HTTP 503"
+  },
+  "fast-action-yeast": {
+    "canonicalName": "Fast-action yeast",
+    "error": "HTTP 503"
+  },
+  "breadfruit": {
+    "canonicalName": "Breadfruit",
+    "error": "HTTP 503"
+  },
+  "floury-potatoes": {
+    "canonicalName": "Floury potatoes",
+    "error": "HTTP 503"
+  },
+  "nougatine": {
+    "canonicalName": "Nougatine",
+    "error": "HTTP 503"
+  },
+  "chocolate-hazelnut-spread": {
+    "canonicalName": "Chocolate hazelnut spread",
+    "suggestedSize": 400,
+    "unit": "g",
+    "offBarcode": "16256163",
+    "brand": "Poulain",
+    "productName": "Poulain",
+    "samples": 12
+  },
+  "cream-filled-chocolate-biscuits": {
+    "canonicalName": "Cream-filled chocolate biscuits",
+    "error": "HTTP 503"
+  },
+  "turkish-delight": {
+    "canonicalName": "Turkish delight",
+    "suggestedSize": 1000,
+    "unit": "g",
+    "offBarcode": "20491543",
+    "brand": "Milbona",
+    "productName": "Turkkilainen jogurtti 10%",
+    "samples": 12
+  },
+  "white-chocolate": {
+    "canonicalName": "White chocolate",
+    "error": "HTTP 503"
+  },
+  "paccheri-pasta": {
+    "canonicalName": "Paccheri pasta",
+    "error": "HTTP 503"
+  },
+  "pappardelle-pasta": {
+    "canonicalName": "Pappardelle pasta",
+    "error": "HTTP 503"
+  },
+  "penne-pasta": {
+    "canonicalName": "Penne pasta",
+    "error": "HTTP 503"
+  },
+  "vermicelli-pasta": {
+    "canonicalName": "Vermicelli pasta",
+    "error": "HTTP 503"
+  },
+  "paella-rice": {
+    "canonicalName": "Paella rice",
+    "error": "HTTP 503"
+  },
+  "sushi-rice": {
+    "canonicalName": "Sushi rice",
+    "suggestedSize": 500,
+    "unit": "g",
+    "offBarcode": "20482077",
+    "brand": "Vitasia",
+    "productName": "Sushi Rice",
+    "samples": 12
+  },
+  "quinoa": {
+    "canonicalName": "Quinoa",
+    "suggestedSize": 250,
+    "unit": "g",
+    "offBarcode": "5018095196596",
+    "brand": "Mexican Gourmet",
+    "productName": "5 Glorious Grains",
+    "samples": 12
+  },
+  "rice-vermicelli": {
+    "canonicalName": "Rice vermicelli",
+    "error": "HTTP 503"
+  },
+  "udon-noodles": {
+    "canonicalName": "Udon noodles",
+    "suggestedSize": 150,
+    "unit": "g",
+    "offBarcode": "5000111043106",
+    "brand": "Amoy",
+    "productName": "Udon thick noodles",
+    "samples": 12
+  },
+  "puffed-rice-cereal": {
+    "canonicalName": "Puffed rice cereal",
+    "error": "HTTP 503"
+  },
+  "semolina-flour": {
+    "canonicalName": "Semolina flour",
+    "error": "HTTP 503"
+  },
+  "sticky-rice-flour": {
+    "canonicalName": "Sticky rice flour",
+    "suggestedSize": null,
+    "unit": "g",
+    "offBarcode": null,
+    "samples": 0
+  },
+  "white-cornmeal": {
+    "canonicalName": "White cornmeal",
+    "suggestedSize": null,
+    "unit": "g",
+    "offBarcode": null,
+    "samples": 0
+  },
+  "masarepa": {
+    "canonicalName": "Masarepa",
+    "suggestedSize": null,
+    "unit": "g",
+    "offBarcode": null,
+    "samples": 0
+  },
+  "puff-pastry": {
+    "canonicalName": "Puff pastry",
+    "error": "HTTP 503"
+  },
+  "shortcrust-pastry": {
+    "canonicalName": "Shortcrust pastry",
+    "error": "HTTP 503"
+  },
+  "rye-bread": {
+    "canonicalName": "Rye bread",
+    "suggestedSize": 250,
+    "unit": "g",
+    "offBarcode": "5010265002911",
+    "brand": "RYVITA",
+    "productName": "Dark Rye Crispbread",
+    "samples": 12
+  },
+  "wholegrain-bread": {
+    "canonicalName": "Wholegrain bread",
+    "error": "HTTP 503"
+  },
+  "almond-milk": {
+    "canonicalName": "Almond milk",
+    "suggestedSize": 1000,
+    "unit": "ml",
+    "offBarcode": "3229820787015",
+    "brand": "Bjorg",
+    "productName": "BjORG AMANDE ALMOND SANS SUCRE- NO SUGAR",
+    "samples": 12
+  },
+  "soya-milk": {
+    "canonicalName": "Soya milk",
+    "suggestedSize": 1000,
+    "unit": "ml",
+    "offBarcode": "5411188543381",
+    "brand": "alpro",
+    "productName": "Soya",
+    "samples": 12
+  },
+  "condensed-milk": {
+    "canonicalName": "Condensed milk",
+    "error": "HTTP 503"
+  },
+  "single-cream": {
+    "canonicalName": "Single cream",
+    "error": "HTTP 503"
+  },
+  "clotted-cream": {
+    "canonicalName": "Clotted cream",
+    "error": "HTTP 503"
+  },
+  "creme-fraiche": {
+    "canonicalName": "Crème fraîche",
+    "error": "HTTP 503"
+  },
+  "greek-yoghurt": {
+    "canonicalName": "Greek yoghurt",
+    "error": "HTTP 503"
+  },
+  "unsalted-butter": {
+    "canonicalName": "Unsalted butter",
+    "error": "HTTP 503"
+  },
+  "vegan-butter": {
+    "canonicalName": "Vegan butter",
+    "error": "HTTP 503"
+  },
+  "vegetable-shortening": {
+    "canonicalName": "Vegetable shortening",
+    "suggestedSize": null,
+    "unit": "g",
+    "offBarcode": null,
+    "samples": 0
+  },
+  "feta": {
+    "canonicalName": "Feta",
+    "suggestedSize": 200,
+    "unit": "g",
+    "offBarcode": "01178395",
+    "brand": "Sainsbury's",
+    "productName": "Greek PDO feta cheese",
+    "samples": 12
+  },
+  "goats-cheese": {
+    "canonicalName": "Goat's cheese",
+    "error": "HTTP 503"
+  },
+  "gouda-cheese": {
+    "canonicalName": "Gouda cheese",
+    "error": "HTTP 503"
+  },
+  "edam-cheese": {
+    "canonicalName": "Edam cheese",
+    "error": "HTTP 503"
+  },
+  "emmental-cheese": {
+    "canonicalName": "Emmental cheese",
+    "suggestedSize": 250,
+    "unit": "g",
+    "offBarcode": "5057545828861",
+    "brand": "Tesco",
+    "productName": "Emmental",
+    "samples": 12
+  },
+  "monterey-jack-cheese": {
+    "canonicalName": "Monterey Jack cheese",
+    "error": "HTTP 503"
+  },
+  "manchego": {
+    "canonicalName": "Manchego",
+    "error": "HTTP 503"
+  },
+  "stilton-cheese": {
+    "canonicalName": "Stilton cheese",
+    "suggestedSize": 220,
+    "unit": "g",
+    "offBarcode": "5051277607831",
+    "brand": "Tesco",
+    "productName": "blue stilton",
+    "samples": 12
+  },
+  "vasterbotten-cheese": {
+    "canonicalName": "Västerbotten cheese",
+    "suggestedSize": null,
+    "unit": "g",
+    "offBarcode": null,
+    "samples": 0
+  },
+  "cheese-curds": {
+    "canonicalName": "Cheese curds",
+    "error": "HTTP 503"
+  },
+  "mozzarella-pearls": {
+    "canonicalName": "Mozzarella pearls",
+    "error": "HTTP 503"
+  },
+  "tofu": {
+    "canonicalName": "Tofu",
+    "error": "HTTP 503"
+  },
+  "vanilla-ice-cream": {
+    "canonicalName": "Vanilla ice cream",
+    "suggestedSize": 900,
+    "unit": "ml",
+    "offBarcode": "8711327529793",
+    "brand": "Carte d'Or",
+    "productName": "Madagascan Vanilla",
+    "samples": 12
+  },
+  "custard": {
+    "canonicalName": "Custard",
+    "error": "HTTP 503"
+  },
+  "creamed-sweetcorn": {
+    "canonicalName": "Creamed sweetcorn",
+    "suggestedSize": null,
+    "unit": "g",
+    "offBarcode": null,
+    "samples": 0
+  },
+  "thai-chilli-jam": {
+    "canonicalName": "Thai chilli jam",
+    "error": "HTTP 503"
+  },
+  "milk-chocolate": {
+    "canonicalName": "Milk chocolate",
+    "suggestedSize": 100,
+    "unit": "g",
+    "offBarcode": "7614500010013",
+    "brand": "Toblerone",
+    "productName": "toblerone",
+    "samples": 12
+  },
+  "gelatine": {
+    "canonicalName": "Gelatine",
+    "error": "HTTP 503"
+  },
+  "vanilla-sugar": {
+    "canonicalName": "Vanilla sugar",
+    "error": "HTTP 503"
+  },
+  "beer": {
+    "canonicalName": "Beer",
+    "suggestedSize": 330,
+    "unit": "ml",
+    "offBarcode": "8008440214065",
+    "brand": "BIRRA PERONI",
+    "productName": "NON-ALCOHOLIC BEER",
+    "samples": 12
+  },
+  "brandy": {
+    "canonicalName": "Brandy",
+    "suggestedSize": 250,
+    "unit": "ml",
+    "offBarcode": "00295598",
+    "brand": "M&S Food",
+    "productName": "Pourable brandy cream",
+    "samples": 12
+  },
+  "cider": {
+    "canonicalName": "Cider",
+    "suggestedSize": 500,
+    "unit": "ml",
+    "offBarcode": "5012845032660",
+    "brand": "Aspall",
+    "productName": "Apple Cider Vinegar",
+    "samples": 12
+  },
+  "dark-rum": {
+    "canonicalName": "Dark rum",
+    "error": "HTTP 503"
+  },
+  "white-rum": {
+    "canonicalName": "White rum",
+    "error": "HTTP 503"
+  },
+  "sherry": {
+    "canonicalName": "Sherry",
+    "suggestedSize": 700,
+    "unit": "ml",
+    "offBarcode": "3103820200036",
+    "brand": "Le Breuil",
+    "productName": "Single malt sherry oloroso",
+    "samples": 12
+  },
+  "ginger-cordial": {
+    "canonicalName": "Ginger cordial",
+    "error": "HTTP 503"
+  },
+  "orange-liqueur": {
+    "canonicalName": "Orange liqueur",
+    "error": "HTTP 503"
+  },
+  "orange-blossom-water": {
+    "canonicalName": "Orange blossom water",
+    "error": "HTTP 503"
+  },
+  "pineapple-juice": {
+    "canonicalName": "Pineapple juice",
+    "error": "HTTP 503"
+  },
+  "rice-wine": {
+    "canonicalName": "Rice wine",
+    "error": "HTTP 503"
+  },
+  "rose-water": {
+    "canonicalName": "Rose water",
+    "error": "HTTP 503"
+  },
+  "soda-water": {
+    "canonicalName": "Soda water",
+    "error": "HTTP 503"
+  },
+  "cherry": {
+    "canonicalName": "Cherry",
+    "error": "HTTP 503"
+  },
+  "pineapple": {
+    "canonicalName": "Pineapple",
+    "error": "HTTP 503"
+  },
+  "cranberry": {
+    "canonicalName": "Cranberry",
+    "suggestedSize": 400,
+    "unit": "g",
+    "offBarcode": "4056489239901",
+    "brand": "Crownfield",
+    "productName": "High Protein Granola Cranberry & Almond",
+    "samples": 12
+  },
+  "coconut": {
+    "canonicalName": "Coconut",
+    "error": "HTTP 503"
+  },
+  "longan": {
+    "canonicalName": "Longan",
+    "suggestedSize": 80,
+    "unit": "g",
+    "offBarcode": "8857200210812",
+    "brand": null,
+    "productName": "Longan Cookies",
+    "samples": 2
+  },
+  "cherry-tomato": {
+    "canonicalName": "Cherry tomato",
+    "error": "HTTP 503"
+  },
+  "saskatoon-berries": {
+    "canonicalName": "Saskatoon berries",
+    "suggestedSize": null,
+    "unit": "g",
+    "offBarcode": null,
+    "samples": 0
+  },
+  "frozen-mixed-berries": {
+    "canonicalName": "Frozen mixed berries",
+    "error": "HTTP 503"
+  },
+  "dates": {
+    "canonicalName": "Dates",
+    "error": "HTTP 503"
+  },
+  "prunes": {
+    "canonicalName": "Prunes",
+    "error": "HTTP 503"
+  },
+  "raisins": {
+    "canonicalName": "Raisins",
+    "error": "HTTP 503"
+  },
+  "dried-cranberries": {
+    "canonicalName": "Dried cranberries",
+    "suggestedSize": 150,
+    "unit": "g",
+    "offBarcode": "4088600268873",
+    "brand": "Aldi",
+    "productName": "Dried cranberries",
+    "samples": 12
+  },
+  "dried-cherries": {
+    "canonicalName": "Dried cherries",
+    "error": "HTTP 503"
+  },
+  "dried-fruit": {
+    "canonicalName": "Dried fruit",
+    "suggestedSize": 500,
+    "unit": "g",
+    "offBarcode": "4056489900344",
+    "brand": "Alesto",
+    "productName": "Soft Pitted Apricots",
+    "samples": 12
+  },
+  "glace-cherries": {
+    "canonicalName": "Glacé cherries",
+    "error": "HTTP 503"
+  },
+  "shredded-coconut": {
+    "canonicalName": "Shredded coconut",
+    "error": "HTTP 503"
+  },
+  "blackcurrant-jam": {
+    "canonicalName": "Blackcurrant jam",
+    "error": "HTTP 503"
+  },
+  "plum-jam": {
+    "canonicalName": "Plum jam",
+    "error": "HTTP 503"
+  },
+  "vine-leaves": {
+    "canonicalName": "Vine leaves",
+    "suggestedSize": 280,
+    "unit": "g",
+    "offBarcode": "20026370",
+    "brand": "Eridanous",
+    "productName": null,
+    "samples": 12
+  },
+  "banana-leaves": {
+    "canonicalName": "Banana leaves",
+    "suggestedSize": null,
+    "unit": "g",
+    "offBarcode": null,
+    "samples": 0
+  },
+  "pickle-juice": {
+    "canonicalName": "Pickle juice",
+    "error": "HTTP 503"
+  },
+  "tamarind-pulp": {
+    "canonicalName": "Tamarind pulp",
+    "error": "HTTP 503"
+  },
+  "semolina": {
+    "canonicalName": "Semolina",
+    "suggestedSize": 100,
+    "unit": "g",
+    "offBarcode": "5050665015845",
+    "brand": "AINSLEY",
+    "productName": "ROASTED VEGETABLE COUSCOUS",
+    "samples": 12
+  },
+  "bacon-lardon": {
+    "canonicalName": "Bacon lardon",
+    "error": "HTTP 503"
+  },
+  "beef-brisket": {
+    "canonicalName": "Beef brisket",
+    "error": "HTTP 503"
+  },
+  "beef-fillet": {
+    "canonicalName": "Beef fillet",
+    "error": "HTTP 503"
+  },
+  "beef-shin": {
+    "canonicalName": "Beef shin",
+    "suggestedSize": 308,
+    "unit": "g",
+    "offBarcode": "29417513",
+    "brand": "M&S Gastropub",
+    "productName": "British Beef Shin",
+    "samples": 12
+  },
+  "beef-shoulder": {
+    "canonicalName": "Beef shoulder",
+    "suggestedSize": null,
+    "unit": "g",
+    "offBarcode": null,
+    "samples": 0
+  },
+  "beef-kidney": {
+    "canonicalName": "Beef kidney",
+    "error": "HTTP 503"
+  },
+  "chicken-liver": {
+    "canonicalName": "Chicken liver",
+    "suggestedSize": 170,
+    "unit": "g",
+    "offBarcode": "00261067",
+    "brand": "M&S Food",
+    "productName": "Smooth Chicken Liver Pate",
+    "samples": 12
+  },
+  "chorizo": {
+    "canonicalName": "Chorizo",
+    "suggestedSize": 280,
+    "unit": "g",
+    "offBarcode": "8422229110308",
+    "brand": "Martínez Somalo",
+    "productName": "Chorizo Riojano",
+    "samples": 12
+  },
+  "kielbasa": {
+    "canonicalName": "Kielbasa",
+    "error": "HTTP 503"
+  },
+  "kabanos": {
+    "canonicalName": "Kabanos",
+    "suggestedSize": 250,
+    "unit": "g",
+    "offBarcode": "5900562261312",
+    "brand": "Sokołów",
+    "productName": "kabanos sausages",
+    "samples": 12
+  },
+  "corned-beef": {
+    "canonicalName": "Corned beef",
+    "error": "HTTP 503"
+  },
+  "duck": {
+    "canonicalName": "Duck",
+    "suggestedSize": 570,
+    "unit": "g",
+    "offBarcode": "5034231003627",
+    "brand": "Gressingham",
+    "productName": "Gressingham Aromatic Half Crispy Duck",
+    "samples": 12
+  },
+  "duck-fat": {
+    "canonicalName": "Duck fat",
+    "suggestedSize": 320,
+    "unit": "g",
+    "offBarcode": "00893084",
+    "brand": "Marks & Spencer",
+    "productName": "Christmas British Duck Fat",
+    "samples": 12
+  },
+  "goat-meat": {
+    "canonicalName": "Goat meat",
+    "suggestedSize": 250,
+    "unit": "g",
+    "offBarcode": "5000169526200",
+    "brand": "Waitrose",
+    "productName": "Lactose Free Halloumi cheese made with cow, ewe and goat milk",
+    "samples": 2
+  },
+  "lamb": {
+    "canonicalName": "Lamb",
+    "suggestedSize": 400,
+    "unit": "g",
+    "offBarcode": "5000157062819",
+    "brand": "Heinz",
+    "productName": "Lamb and Vegetable Big Soup",
+    "samples": 12
+  },
+  "lamb-leg": {
+    "canonicalName": "Lamb leg",
+    "suggestedSize": 300,
+    "unit": "g",
+    "offBarcode": "4056489112785",
+    "brand": "Birchwood (Lidl)",
+    "productName": "Lamb Leg Steaks",
+    "samples": 12
+  },
+  "lamb-kidney": {
+    "canonicalName": "Lamb kidney",
+    "suggestedSize": 360,
+    "unit": "g",
+    "offBarcode": "5000169580684",
+    "brand": "Essential Waitrose",
+    "productName": "Lamb Kidneys",
+    "samples": 2
+  },
+  "lamb-fat": {
+    "canonicalName": "Lamb fat",
+    "suggestedSize": 500,
+    "unit": "g",
+    "offBarcode": "01753165",
+    "brand": null,
+    "productName": "Lamb Mince 25% Fat",
+    "samples": 12
+  },
+  "pork": {
+    "canonicalName": "Pork",
+    "suggestedSize": 400,
+    "unit": "g",
+    "offBarcode": "5060317350033",
+    "brand": "HECK",
+    "productName": "HECK 97% 6 SAUSAGES",
+    "samples": 12
+  },
+  "pork-shoulder": {
+    "canonicalName": "Pork shoulder",
+    "error": "HTTP 503"
+  },
+  "pork-tenderloin": {
+    "canonicalName": "Pork tenderloin",
+    "error": "HTTP 503"
+  },
+  "pork-ribs": {
+    "canonicalName": "Pork ribs",
+    "suggestedSize": 450,
+    "unit": "g",
+    "offBarcode": "5059512742613",
+    "brand": "Tescos",
+    "productName": "Smokey BBQ Rib Back",
+    "samples": 12
+  },
+  "pork-belly": {
+    "canonicalName": "Pork belly",
+    "suggestedSize": 342,
+    "unit": "g",
+    "offBarcode": "4088600182766",
+    "brand": "OAKHURST",
+    "productName": "BREAKFAST PORK PATTIES",
+    "samples": 12
+  },
+  "pork-knuckle": {
+    "canonicalName": "Pork knuckle",
+    "suggestedSize": null,
+    "unit": "g",
+    "offBarcode": null,
+    "samples": 0
+  },
+  "lamb-shoulder": {
+    "canonicalName": "Lamb shoulder",
+    "error": "HTTP 503"
+  },
+  "stewing-beef": {
+    "canonicalName": "Stewing beef",
+    "error": "HTTP 503"
+  },
+  "sirloin-steak": {
+    "canonicalName": "Sirloin steak",
+    "suggestedSize": 227,
+    "unit": "g",
+    "offBarcode": "5059512741470",
+    "brand": "Tesco finest",
+    "productName": "British Sirloin Steak",
+    "samples": 12
+  },
+  "skirt-steak": {
+    "canonicalName": "Skirt steak",
+    "error": "HTTP 503"
+  },
+  "oxtail": {
+    "canonicalName": "Oxtail",
+    "suggestedSize": 400,
+    "unit": "g",
+    "offBarcode": "5000157062710",
+    "brand": "Heinz",
+    "productName": "Oxtail Soup",
+    "samples": 12
+  },
+  "tripe": {
+    "canonicalName": "Tripe",
+    "suggestedSize": 230,
+    "unit": "g",
+    "offBarcode": "5060051271069",
+    "brand": "The Bury Black Pudding Co.",
+    "productName": "4 Traditional Black Pudding Slices",
+    "samples": 12
+  },
+  "veal": {
+    "canonicalName": "Veal",
+    "suggestedSize": 167,
+    "unit": "g",
+    "offBarcode": "00797757",
+    "brand": "Marks & Spencer",
+    "productName": null,
+    "samples": 12
+  },
+  "shredded-meat": {
+    "canonicalName": "Shredded meat",
+    "error": "HTTP 503"
+  },
+  "turkey": {
+    "canonicalName": "Turkey",
+    "error": "HTTP 503"
+  },
+  "turkey-mince": {
+    "canonicalName": "Turkey mince",
+    "error": "HTTP 503"
+  },
+  "turkey-neck": {
+    "canonicalName": "Turkey neck",
+    "error": "HTTP 503"
+  },
+  "parma-ham": {
+    "canonicalName": "Parma ham",
+    "suggestedSize": 80,
+    "unit": "g",
+    "offBarcode": "5063089485552",
+    "brand": "Asda",
+    "productName": "Prosciutto Di Parma",
+    "samples": 12
+  },
+  "smoked-ham": {
+    "canonicalName": "Smoked ham",
+    "error": "HTTP 503"
+  },
+  "turkey-ham": {
+    "canonicalName": "Turkey ham",
+    "suggestedSize": 100,
+    "unit": "g",
+    "offBarcode": "5010236157534",
+    "brand": "Bernard Matthews",
+    "productName": "Turkey Ham",
+    "samples": 12
+  },
+  "morcilla": {
+    "canonicalName": "Morcilla",
+    "suggestedSize": null,
+    "unit": "g",
+    "offBarcode": null,
+    "samples": 0
+  },
+  "polish-sausage": {
+    "canonicalName": "Polish sausage",
+    "error": "HTTP 503"
+  },
+  "sour-pork-sausage": {
+    "canonicalName": "Sour pork sausage",
+    "error": "HTTP 503"
+  },
+  "pistachios": {
+    "canonicalName": "Pistachios",
+    "error": "HTTP 503"
+  },
+  "rye": {
+    "canonicalName": "Rye",
+    "suggestedSize": 250,
+    "unit": "g",
+    "offBarcode": "5010265002911",
+    "brand": "RYVITA",
+    "productName": "Dark Rye Crispbread",
+    "samples": 12
+  },
+  "asparagus": {
+    "canonicalName": "Asparagus",
+    "error": "HTTP 503"
+  },
+  "brussels-sprouts": {
+    "canonicalName": "Brussels sprouts",
+    "error": "HTTP 503"
+  },
+  "horseradish": {
+    "canonicalName": "Horseradish",
+    "suggestedSize": 175,
+    "unit": "g",
+    "offBarcode": "4088600208534",
+    "brand": "Bramwells",
+    "productName": "Horseradish Sauce",
+    "samples": 12
+  },
+  "ackee": {
+    "canonicalName": "Ackee",
+    "suggestedSize": 164,
+    "unit": "g",
+    "offBarcode": "5029788155110",
+    "brand": "Tropical Sun",
+    "productName": "Jamaica Ackee",
+    "samples": 6
+  },
+  "blackberries": {
+    "canonicalName": "Blackberries",
+    "suggestedSize": 150,
+    "unit": "g",
+    "offBarcode": "4056489698074",
+    "brand": "Deluxe",
+    "productName": "British Blackberries",
+    "samples": 12
+  },
+  "blueberries": {
+    "canonicalName": "Blueberries",
+    "suggestedSize": 150,
+    "unit": "g",
+    "offBarcode": "01835151",
+    "brand": "Sainsbury's",
+    "productName": "BLUEBERRIES",
+    "samples": 12
+  },
+  "dried-apricots": {
+    "canonicalName": "Dried apricots",
+    "suggestedSize": 500,
+    "unit": "g",
+    "offBarcode": "4056489900344",
+    "brand": "Alesto",
+    "productName": "Soft Pitted Apricots",
+    "samples": 12
+  },
+  "chestnuts": {
+    "canonicalName": "Chestnuts",
+    "suggestedSize": 250,
+    "unit": "g",
+    "offBarcode": "5052909624615",
+    "brand": "Tesco",
+    "productName": "Chestnut mushrooms",
+    "samples": 12
+  },
+  "hazelnuts": {
+    "canonicalName": "Hazelnuts",
+    "error": "HTTP 503"
+  },
+  "chives": {
+    "canonicalName": "Chives",
+    "suggestedSize": 150,
+    "unit": "g",
+    "offBarcode": "5060042641437",
+    "brand": "Tyrrells",
+    "productName": "Mature Cheddar & Chive",
+    "samples": 12
+  },
+  "dill": {
+    "canonicalName": "Dill",
+    "error": "HTTP 503"
+  },
+  "brie": {
+    "canonicalName": "Brie",
+    "error": "HTTP 503"
+  },
+  "gruyere": {
+    "canonicalName": "Gruyère",
+    "error": "HTTP 503"
+  },
+  "fromage-frais": {
+    "canonicalName": "Fromage frais",
+    "suggestedSize": 85,
+    "unit": "g",
+    "offBarcode": "3329770051577",
+    "brand": "Yoplait",
+    "productName": "Petits Filous Fromage Frais, Strawberry & Apricot",
+    "samples": 12
+  },
+  "black-pudding": {
+    "canonicalName": "Black pudding",
+    "error": "HTTP 503"
+  },
+  "doner-meat": {
+    "canonicalName": "Doner meat",
+    "suggestedSize": 600,
+    "unit": "g",
+    "offBarcode": "5060639601776",
+    "brand": "Jahan",
+    "productName": "Cooked & Sliced Doner Kebab Meat",
+    "samples": 12
+  },
+  "clams": {
+    "canonicalName": "Clams",
+    "error": "HTTP 503"
+  },
+  "capers": {
+    "canonicalName": "Capers",
+    "error": "HTTP 503"
+  },
+  "green-salsa": {
+    "canonicalName": "Green salsa",
+    "suggestedSize": 387,
+    "unit": "g",
+    "offBarcode": "5391527000075",
+    "brand": "Birds Eye",
+    "productName": "Vegan Stonebaked Meatless Mediterranean",
+    "samples": 3
+  },
+  "caramel": {
+    "canonicalName": "Caramel",
+    "suggestedSize": 400,
+    "unit": "g",
+    "offBarcode": "5410126116953",
+    "brand": "Lotus",
+    "productName": "Biscoff Smooth",
+    "samples": 12
+  },
+  "cacao": {
+    "canonicalName": "Cacao",
+    "error": "HTTP 503"
+  },
+  "brown-lentils": {
+    "canonicalName": "Brown lentils",
+    "suggestedSize": 240,
+    "unit": "g",
+    "offBarcode": "4061461308698",
+    "brand": "Aldi",
+    "productName": "Brown Lentils in Water",
+    "samples": 12
+  },
+  "fettuccine": {
+    "canonicalName": "Fettuccine",
+    "suggestedSize": 200,
+    "unit": "g",
+    "offBarcode": "00414234",
+    "brand": "Trader Giotto's",
+    "productName": "Fettuccine Alfredo",
+    "samples": 12
+  },
+  "fideo": {
+    "canonicalName": "Fideo",
+    "suggestedSize": 60,
+    "unit": "g",
+    "offBarcode": "7613030612247",
+    "brand": "Maggi",
+    "productName": "Costilla con fideos (Maggi)",
+    "samples": 2
+  },
+  "fries": {
+    "canonicalName": "Fries",
+    "error": "HTTP 503"
+  },
+  "blue-food-colouring": {
+    "canonicalName": "Blue food colouring",
+    "error": "HTTP 503"
+  },
+  "christmas-pudding": {
+    "canonicalName": "Christmas pudding",
+    "suggestedSize": 100,
+    "unit": "g",
+    "offBarcode": "00682718",
+    "brand": "Sainsbury's",
+    "productName": "Christmas Pudding",
+    "samples": 12
+  },
+  "goose-fat": {
+    "canonicalName": "Goose fat",
+    "suggestedSize": 320,
+    "unit": "g",
+    "offBarcode": "5057753909116",
+    "brand": "Tesco",
+    "productName": "Goose fat",
+    "samples": 12
+  },
+  "tarragon": {
+    "canonicalName": "Tarragon",
+    "suggestedSize": 12,
+    "unit": "g",
+    "offBarcode": "00619141",
+    "brand": "Marks & Spencer",
+    "productName": "Tarragon",
+    "samples": 12
+  },
+  "poppy-seeds": {
+    "canonicalName": "Poppy seeds",
+    "suggestedSize": 496,
+    "unit": "g",
+    "offBarcode": "4056489239666",
+    "brand": "Rowan Hill Bakery",
+    "productName": "Seeded Tortilla Wraps",
+    "samples": 12
+  },
+  "jerusalem-artichoke": {
+    "canonicalName": "Jerusalem artichoke",
+    "error": "HTTP 503"
+  },
+  "kale": {
+    "canonicalName": "Kale",
+    "suggestedSize": 380,
+    "unit": "g",
+    "offBarcode": "4056489825111",
+    "brand": "CHEF SELECT HIGH PROTEIN",
+    "productName": "CHICKEN TIKKA WITH KALE & RICE",
+    "samples": 12
+  },
+  "turnip": {
+    "canonicalName": "Turnip",
+    "error": "HTTP 503"
+  },
+  "strawberries": {
+    "canonicalName": "Strawberries",
+    "suggestedSize": 400,
+    "unit": "g",
+    "offBarcode": "3415581105926",
+    "brand": "Häagen-Dazs",
+    "productName": "Strawberries & Cream Ice Cream",
+    "samples": 12
+  },
+  "raspberries": {
+    "canonicalName": "Raspberries",
+    "suggestedSize": 200,
+    "unit": "g",
+    "offBarcode": "4056489258353",
+    "brand": "Milbona",
+    "productName": "Raspberry-Pomegranate Milk Product",
+    "samples": 12
+  },
+  "redcurrants": {
+    "canonicalName": "Redcurrants",
+    "suggestedSize": 340,
+    "unit": "g",
+    "offBarcode": "5000119101181",
+    "brand": "Tesco",
+    "productName": "Redcurrant Jelly",
+    "samples": 12
+  },
+  "medjool-dates": {
+    "canonicalName": "Medjool dates",
+    "suggestedSize": 500,
+    "unit": "g",
+    "offBarcode": "01875546",
+    "brand": "Sainsbury's taste the difference",
+    "productName": "Medjool dates",
+    "samples": 12
+  },
+  "mascarpone": {
+    "canonicalName": "Mascarpone",
+    "error": "HTTP 503"
+  },
+  "ricotta": {
+    "canonicalName": "Ricotta",
+    "suggestedSize": 250,
+    "unit": "g",
+    "offBarcode": "4056489009191",
+    "brand": "Baresa",
+    "productName": "Tortelloni Ricotta et épinards",
+    "samples": 12
+  },
+  "paneer": {
+    "canonicalName": "Paneer",
+    "error": "HTTP 503"
+  },
+  "mozzarella-balls": {
+    "canonicalName": "Mozzarella balls",
+    "error": "HTTP 503"
+  },
+  "parmigiano-reggiano": {
+    "canonicalName": "Parmigiano-reggiano",
+    "suggestedSize": 200,
+    "unit": "g",
+    "offBarcode": "5051140449377",
+    "brand": "Tesco",
+    "productName": "Parmigiano Reggiano",
+    "samples": 12
+  },
+  "prosciutto": {
+    "canonicalName": "Prosciutto",
+    "error": "HTTP 503"
+  },
+  "pilchards": {
+    "canonicalName": "Pilchards",
+    "error": "HTTP 503"
+  },
+  "lasagne-sheets": {
+    "canonicalName": "Lasagne sheets",
+    "suggestedSize": 500,
+    "unit": "g",
+    "offBarcode": "8076800376999",
+    "brand": "Barilla",
+    "productName": "Lasagne all'uovo",
+    "samples": 12
+  },
+  "penne": {
+    "canonicalName": "Penne",
+    "error": "HTTP 503"
+  },
+  "toor-dal": {
+    "canonicalName": "Toor dal",
+    "suggestedSize": null,
+    "unit": "g",
+    "offBarcode": null,
+    "samples": 2
+  },
+  "wheat-berries": {
+    "canonicalName": "Wheat berries",
+    "suggestedSize": 300,
+    "unit": "g",
+    "offBarcode": "5000169381311",
+    "brand": "Waitrose",
+    "productName": "Fresh & herby wheat berries lentils & green vegetables",
+    "samples": 5
+  },
+  "mixed-grains": {
+    "canonicalName": "Mixed grains",
+    "suggestedSize": 800,
+    "unit": "g",
+    "offBarcode": "5057545928769",
+    "brand": "Tesco finest",
+    "productName": "Farmhouse Super Seeded Loaf",
+    "samples": 12
+  },
+  "marzipan": {
+    "canonicalName": "Marzipan",
+    "error": "HTTP 503"
+  },
+  "mini-marshmallows": {
+    "canonicalName": "Mini marshmallows",
+    "suggestedSize": 180,
+    "unit": "g",
+    "offBarcode": "4056489567653",
+    "brand": "Belbake",
+    "productName": "Mini marshmallows",
+    "samples": 12
+  },
+  "mixed-peel": {
+    "canonicalName": "Mixed peel",
+    "error": "HTTP 503"
+  },
+  "pine-nuts": {
+    "canonicalName": "Pine nuts",
+    "error": "HTTP 503"
+  },
+  "pecans": {
+    "canonicalName": "Pecans",
+    "error": "HTTP 503"
+  },
+  "suet": {
+    "canonicalName": "Suet",
+    "error": "HTTP 503"
+  },
+  "pretzels": {
+    "canonicalName": "Pretzels",
+    "suggestedSize": 175,
+    "unit": "g",
+    "offBarcode": "5032439100070",
+    "brand": "Penn State Snacks",
+    "productName": "Original Sea Salted Wheat Pretzels",
+    "samples": 12
+  },
+  "toffee-popcorn": {
+    "canonicalName": "Toffee popcorn",
+    "suggestedSize": 170,
+    "unit": "g",
+    "offBarcode": "5000237126875",
+    "brand": "Butterkist",
+    "productName": "Crunchy Toffee Popcorn",
+    "samples": 12
+  },
+  "lard": {
+    "canonicalName": "Lard",
+    "error": "HTTP 503"
+  },
+  "tahini": {
+    "canonicalName": "Tahini",
+    "error": "HTTP 503"
+  },
+  "tamarind": {
+    "canonicalName": "Tamarind",
+    "suggestedSize": 130,
+    "unit": "g",
+    "offBarcode": "5055036977173",
+    "brand": "Thai Taste",
+    "productName": "Tamarind Paste",
+    "samples": 12
+  },
+  "salsa": {
+    "canonicalName": "Salsa",
+    "error": "HTTP 503"
+  },
+  "vinaigrette": {
+    "canonicalName": "Vinaigrette",
+    "suggestedSize": 250,
+    "unit": "ml",
+    "offBarcode": "50460700",
+    "brand": "Newman’s Own",
+    "productName": "NewFrench Dressing 250Ml",
+    "samples": 12
+  },
+  "sake": {
+    "canonicalName": "Sake",
+    "suggestedSize": 250,
+    "unit": "ml",
+    "offBarcode": "5000169124727",
+    "brand": "Waitrose",
+    "productName": "Shaoxing rice wine for cooking",
+    "samples": 5
+  },
+  "stout": {
+    "canonicalName": "Stout",
+    "suggestedSize": 440,
+    "unit": "ml",
+    "offBarcode": "50213085",
+    "brand": "Guinness",
+    "productName": "Draught Stout",
+    "samples": 12
+  },
+  "food-colouring": {
+    "canonicalName": "Food colouring",
+    "error": "HTTP 503"
+  },
+  "almond-paste": {
+    "canonicalName": "Almond paste",
+    "suggestedSize": 100,
+    "unit": "g",
+    "offBarcode": "4000417025005",
+    "brand": "Alfred Griiner GmbH & Co. KG",
+    "productName": "Ritter Sport Marzapane chocolate",
+    "samples": 7
+  },
+  "jam": {
+    "canonicalName": "Jam",
+    "suggestedSize": 370,
+    "unit": "g",
+    "offBarcode": "3045320094008",
+    "brand": "Bonne Maman",
+    "productName": "Strawberry Conserve",
+    "samples": 12
+  },
+  "caramel-sauce": {
+    "canonicalName": "Caramel sauce",
+    "error": "HTTP 503"
+  },
+  "dulce-de-leche": {
+    "canonicalName": "Dulce de leche",
+    "suggestedSize": 100,
+    "unit": "g",
+    "offBarcode": "7622210269249",
+    "brand": "Milka",
+    "productName": "Milka Chips Ahoy!",
+    "samples": 12
+  },
+  "date-molasses": {
+    "canonicalName": "Date molasses",
+    "error": "HTTP 503"
+  },
+  "dutch-stroop": {
+    "canonicalName": "Dutch stroop",
+    "error": "HTTP 503"
+  },
+  "barbecue-sauce": {
+    "canonicalName": "Barbecue sauce",
+    "error": "HTTP 503"
+  },
+  "gravy": {
+    "canonicalName": "Gravy",
+    "suggestedSize": null,
+    "unit": "ml",
+    "offBarcode": null,
+    "samples": 12
+  },
+  "chilli-sauce": {
+    "canonicalName": "Chilli sauce",
+    "suggestedSize": 455,
+    "unit": "ml",
+    "offBarcode": "5020580016999",
+    "brand": "THAI DRAGON",
+    "productName": "SRIRACHA HOT CHILLI SAUCE",
+    "samples": 12
+  },
+  "chimichurri": {
+    "canonicalName": "Chimichurri",
+    "error": "HTTP 503"
+  },
+  "sesame-sauce": {
+    "canonicalName": "Sesame sauce",
+    "suggestedSize": 200,
+    "unit": "g",
+    "offBarcode": "09014947",
+    "brand": "Morrisons",
+    "productName": "Houmous",
+    "samples": 12
+  },
+  "doubanjiang": {
+    "canonicalName": "Doubanjiang",
+    "suggestedSize": null,
+    "unit": "g",
+    "offBarcode": null,
+    "samples": 0
+  },
+  "duck-sauce": {
+    "canonicalName": "Duck sauce",
+    "suggestedSize": 530,
+    "unit": "g",
+    "offBarcode": "5016157078125",
+    "brand": "Gressingham",
+    "productName": "Duck Legs In Orange And Maple Sauce",
+    "samples": 12
+  },
+  "enchilada-sauce": {
+    "canonicalName": "Enchilada sauce",
+    "error": "HTTP 503"
+  },
+  "garlic-sauce": {
+    "canonicalName": "Garlic sauce",
+    "suggestedSize": 200,
+    "unit": "g",
+    "offBarcode": "7290105690005",
+    "brand": "Sabra",
+    "productName": "Houmous Garlic + Red Pepper",
+    "samples": 12
+  },
+  "gherkin-relish": {
+    "canonicalName": "Gherkin relish",
+    "suggestedSize": null,
+    "unit": "g",
+    "offBarcode": null,
+    "samples": 1
+  },
+  "hoisin-sauce": {
+    "canonicalName": "Hoisin sauce",
+    "suggestedSize": 290,
+    "unit": "g",
+    "offBarcode": "5000197503969",
+    "brand": "Sharwood's",
+    "productName": "Hoisin Dipping Sauce",
+    "samples": 12
+  },
+  "gochujang": {
+    "canonicalName": "Gochujang",
+    "error": "HTTP 503"
+  },
+  "hummus": {
+    "canonicalName": "Hummus",
+    "error": "HTTP 503"
+  },
+  "ginger-paste": {
+    "canonicalName": "Ginger paste",
+    "error": "HTTP 503"
+  },
+  "ginger-garlic-paste": {
+    "canonicalName": "Ginger garlic paste",
+    "error": "HTTP 503"
+  }
+}

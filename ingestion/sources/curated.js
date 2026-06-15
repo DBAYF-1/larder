@@ -14,6 +14,8 @@
 import { slugify } from '../pipeline/resolve.js'
 import mains from '../data/curated/mains.js'
 import puddings from '../data/curated/puddings.js'
+import dinners from '../data/curated/dinners.js'
+import regional from '../data/curated/regional.js'
 
 // ── Larder brand palette (mirrors src/styles/tokens.css) ─────────────────────
 const LARDER = {
@@ -147,19 +149,32 @@ export function mapCurated(recipe) {
  * @returns {Promise<Array<object>>}
  */
 export async function fetchCurated({ log = () => {}, onError = () => {} } = {}) {
-  const source = [...(mains || []), ...(puddings || [])]
+  const source = [
+    ...(mains || []),
+    ...(puddings || []),
+    ...(dinners || []),
+    ...(regional || []),
+  ]
+  // De-dup by sourceId in case two curated files share a title.
   const recipes = []
+  const seen = new Set()
   for (const recipe of source) {
     try {
       if (!recipe || !recipe.title) {
         onError({ stage: 'curated', message: 'recipe missing title' })
         continue
       }
-      recipes.push(mapCurated(recipe))
+      const mapped = mapCurated(recipe)
+      if (seen.has(mapped.sourceId)) continue
+      seen.add(mapped.sourceId)
+      recipes.push(mapped)
     } catch (err) {
       onError({ stage: 'curated', id: recipe?.title, message: err.message })
     }
   }
-  log(`Curated: ${recipes.length} recipes (${(mains || []).length} mains + ${(puddings || []).length} puddings)`)
+  log(
+    `Curated: ${recipes.length} recipes (${(mains || []).length} mains + ${(puddings || []).length} puddings` +
+      ` + ${(dinners || []).length} dinners + ${(regional || []).length} regional)`,
+  )
   return recipes
 }

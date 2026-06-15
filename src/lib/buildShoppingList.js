@@ -24,7 +24,7 @@ import {
   SECTION_ORDER,
   aisleRank,
 } from './shopWalk.js'
-import { friendly, roundUpTo, minNote } from './format.js'
+import { friendly, roundUpTo, minNote, friendlyPackLabel } from './format.js'
 
 /**
  * @param {{recipeIds:string[], householdSize:number}} basket
@@ -150,6 +150,7 @@ export function buildShoppingList(basket, recipes, ingredients) {
       contributingRecipes: contributingRecipesFrom(entry.recipes),
       optional: false,
       raw: null,
+      pack: null,
     })
   }
 
@@ -164,6 +165,7 @@ export function buildShoppingList(basket, recipes, ingredients) {
       contributingRecipes: [{ id: line.recipeId, title: line.recipeTitle }],
       optional: false,
       raw: line.raw,
+      pack: null,
     })
   }
 
@@ -229,6 +231,11 @@ export function buildShoppingList(basket, recipes, ingredients) {
 
     const displayQuantity = friendly(need, baseUnit, displayRules)
 
+    // PACK ROUNDING (spec §5.1): whole-pack buy guidance + spare, computed from
+    // the FINAL `need` (post min-purchase bump and post roundUpTo). Pure: no
+    // unit guessing — only when a pack's unit matches the item's base unit.
+    const pack = computePack(ingredient, need, baseUnit)
+
     // Bump note "(min …)" — annotated only when we raised to the minimum.
     const note = bumped ? minNote(minimum, baseUnit) : null
 
@@ -253,6 +260,59 @@ export function buildShoppingList(basket, recipes, ingredients) {
       contributingRecipes: contributingRecipesFrom(entry.recipes),
       optional,
       raw: null,
+      pack,
     }
+  }
+
+  // ── Local helper: pack-rounding (spec §5.1) ─────────────────────────────────
+  // Given the canonical ingredient, the FINAL needed quantity (already bumped to
+  // minimumPurchase and rounded by displayRules.roundUpTo) and the item's base
+  // unit, return the pack object or null. Never guesses unit conversions.
+  function computePack(ingredient, need, baseUnit) {
+    if (!ingredient) return null
+
+    // Choose a pack: prefer defaultPack, else the first typicalPack.
+    const def = ingredient.defaultPack
+    const typical = Array.isArray(ingredient.typicalPacks) ? ingredient.typicalPacks[0] : null
+    const pick = (def && typeof def.size === 'number') ? def : (typical || null)
+    if (!pick || typeof pick.size !== 'number') return null
+
+    // No usable pack when the pack unit doesn't match the unit `need` is in,
+    // or the size is non-positive — do NOT fabricate a conversion.
+    if (pick.unit !== baseUnit) return null
+    if (!(pick.size > 0)) return null
+
+    // A single-unit count pack ("1 loose onion", "pack of rashers" sized 1) adds
+    // nothing the item quantity already says, and yields nonsense like
+    // "25 × pack of rashers". Only show count packs that bundle (size > 1).
+    if (pick.unit === 'count' && pick.size <= 1) return null
+
+    const count = Math.ceil(need / pick.size)
+    const total = count * pick.size
+    const spareAmt = total - need
+
+    // Human label for one pack: explicit label wins, else a friendly fallback.
+    // A bare weight/volume label ("pack", "block", "bag") reads better with the
+    // size prefixed ("500 g pack"); count labels ("pack of rashers", "box of 6")
+    // are left as written.
+    let packLabel
+    if (typeof pick.label === 'string' && pick.label.length > 0) {
+      const sizeless = !/\d/.test(pick.label) && (pick.unit === 'g' || pick.unit === 'ml')
+      packLabel = sizeless ? `${friendlyPackLabel(pick.size, pick.unit)} ${pick.label}` : pick.label
+    } else {
+      packLabel = friendlyPackLabel(pick.size, pick.unit)
+    }
+
+    const buyLabel = `${count} × ${packLabel}`
+
+    // Spare is shown only when meaningful: a whole spare unit for counts,
+    // 5 g/ml for mass/volume. Otherwise null (exact fill or negligible).
+    let spare = null
+    const meaningful = baseUnit === 'count' ? spareAmt >= 1 : spareAmt >= 5
+    if (meaningful) {
+      spare = `${friendly(spareAmt, baseUnit, {})} spare`
+    }
+
+    return { packLabel, count, buyLabel, spare }
   }
 }

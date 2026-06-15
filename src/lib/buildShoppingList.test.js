@@ -118,6 +118,160 @@ const ING = {
   },
 }
 
+// ── Pack-rounding fixtures (spec §5.1) ───────────────────────────────────────
+// Separate ING set so the existing acceptance tests above are untouched. Each
+// ingredient carries a defaultPack and/or typicalPacks to exercise the pack
+// field. Expected pack values are hand-verified inline in each test.
+const ING_PACK = {
+  // Tinned tomatoes sold by the 400 g tin (min 400 g) — explicit pack label.
+  choppedTomatoes: {
+    id: 'choppedTomatoes',
+    canonicalName: 'Chopped tomatoes',
+    aisle: 'Tinned & Jarred',
+    baseUnit: 'g',
+    minimumPurchase: { number: null, weight: 400, unit: 'g', note: '1 tin' },
+    alternatives: [],
+    defaultPack: { size: 400, unit: 'g', label: '400 g tin' },
+    displayRules: { preferUnit: null, roundUpTo: null },
+  },
+  // Pasta/rice sold by the 500 g bag — explicit label.
+  pastaBag: {
+    id: 'pastaBag',
+    canonicalName: 'Pasta',
+    aisle: 'Dry & Baking',
+    baseUnit: 'g',
+    minimumPurchase: { number: null, weight: null, unit: 'g', note: '' },
+    alternatives: [],
+    defaultPack: { size: 500, unit: 'g', label: '500 g bag' },
+    displayRules: { preferUnit: null, roundUpTo: null },
+  },
+  // Eggs sold in a box of 6 — count pack with an explicit label.
+  egg: {
+    id: 'egg',
+    canonicalName: 'Egg',
+    aisle: 'Dairy & Eggs',
+    baseUnit: 'count',
+    minimumPurchase: { number: null, weight: null, unit: 'count', note: '' },
+    alternatives: [],
+    defaultPack: { size: 6, unit: 'count', label: 'box of 6' },
+    displayRules: { preferUnit: null, roundUpTo: null },
+  },
+  // Ground ginger — min-purchase 250 g jar; pack is that same 250 g jar.
+  groundGinger: {
+    id: 'groundGinger',
+    canonicalName: 'Ground ginger',
+    aisle: 'Herbs & Spices',
+    baseUnit: 'g',
+    minimumPurchase: { number: null, weight: 250, unit: 'g', note: 'jar' },
+    alternatives: [],
+    defaultPack: { size: 250, unit: 'g', label: '250 g jar' },
+    displayRules: { preferUnit: null, roundUpTo: null },
+  },
+  // No pack at all → pack must be null.
+  onion: {
+    id: 'onion',
+    canonicalName: 'Onion',
+    aisle: 'Produce',
+    baseUnit: 'count',
+    minimumPurchase: { number: null, weight: null, unit: 'count', note: '' },
+    alternatives: [],
+    displayRules: { preferUnit: null, roundUpTo: null },
+  },
+  // Pack unit mismatches the base unit (pack is 'ml', item is 'g') → null.
+  honey: {
+    id: 'honey',
+    canonicalName: 'Honey',
+    aisle: 'Dry & Baking',
+    baseUnit: 'g',
+    minimumPurchase: { number: null, weight: null, unit: 'g', note: '' },
+    alternatives: [],
+    defaultPack: { size: 340, unit: 'ml', label: '340 ml jar' },
+    displayRules: { preferUnit: null, roundUpTo: null },
+  },
+  // No defaultPack — falls back to typicalPacks[0]; no explicit label, so the
+  // friendlyPackLabel fallback applies ("250 g").
+  rice: {
+    id: 'rice',
+    canonicalName: 'Rice',
+    aisle: 'Dry & Baking',
+    baseUnit: 'g',
+    minimumPurchase: { number: null, weight: null, unit: 'g', note: '' },
+    alternatives: [],
+    typicalPacks: [{ size: 250, unit: 'g', label: '' }],
+    displayRules: { preferUnit: null, roundUpTo: null },
+  },
+  // A staple WITH a pack defined — staples must still get pack:null.
+  salt: {
+    id: 'salt',
+    canonicalName: 'Salt',
+    aisle: 'Herbs & Spices',
+    baseUnit: 'g',
+    staple: true,
+    minimumPurchase: { number: null, weight: null, unit: 'g', note: '' },
+    alternatives: [],
+    defaultPack: { size: 500, unit: 'g', label: '500 g tub' },
+    displayRules: { preferUnit: null, roundUpTo: null },
+  },
+  // An optional extra WITH a pack — Optional extras must carry the pack field.
+  soySauce: {
+    id: 'soySauce',
+    canonicalName: 'Soy sauce',
+    aisle: 'Tinned & Jarred',
+    baseUnit: 'ml',
+    minimumPurchase: { number: null, weight: null, unit: 'ml', note: '' },
+    alternatives: [],
+    defaultPack: { size: 150, unit: 'ml', label: '150 ml bottle' },
+    displayRules: { preferUnit: null, roundUpTo: null },
+  },
+  // A single-unit count "pack" (loose item, size 1) — must NOT show a pack line,
+  // because the quantity already says it and "25 × pack of rashers" is nonsense.
+  looseBacon: {
+    id: 'looseBacon',
+    canonicalName: 'Bacon',
+    aisle: 'Meat & Fish',
+    baseUnit: 'count',
+    minimumPurchase: { number: null, weight: null, unit: 'count', note: '' },
+    alternatives: [],
+    defaultPack: { size: 1, unit: 'count', label: 'pack of rashers' },
+    displayRules: { preferUnit: null, roundUpTo: null },
+  },
+  // A bare weight label ("pack") should get the size prefixed -> "500 g pack".
+  mince: {
+    id: 'mince',
+    canonicalName: 'Minced beef',
+    aisle: 'Meat & Fish',
+    baseUnit: 'g',
+    minimumPurchase: { number: null, weight: null, unit: 'g', note: '' },
+    alternatives: [],
+    defaultPack: { size: 500, unit: 'g', label: 'pack' },
+    displayRules: { preferUnit: null, roundUpTo: null },
+  },
+}
+
+// Build a one-line recipe for the pack tests.
+function packRecipe(ingredientId, quantityInBaseUnit, baseUnit, extra = {}) {
+  return {
+    r1: {
+      id: 'r1',
+      title: 'Pack test',
+      servingsBase: 2,
+      ingredients: [
+        {
+          raw: 'pack test line',
+          ingredientId,
+          quantityInBaseUnit,
+          baseUnit,
+          resolutionStatus: 'resolved',
+          optional: false,
+          staple: false,
+          displayOrder: 0,
+          ...extra,
+        },
+      ],
+    },
+  }
+}
+
 // ── Spec 4.2 edge cases ──────────────────────────────────────────────────────
 
 describe('staple line "salt and pepper to taste"', () => {
@@ -725,5 +879,206 @@ describe('edge cases & defaults', () => {
     const list = buildShoppingList({ recipeIds: ['r1'], householdSize: 0 }, recipes, ING)
     expect(list.totals.householdSize).toBe(1)
     expect(item(list, 'Produce', 'Onion').displayQuantity).toBe('1')
+  })
+})
+
+// ── Pack rounding (spec §5.1) ────────────────────────────────────────────────
+// Buy-whole-packs guidance + spare. Every expected value is hand-verified.
+// Households are 2 == servingsBase 2 => factor 1, so quantityInBaseUnit is the
+// need (before any min-purchase bump / roundUpTo).
+describe('pack rounding — buy N × pack · spare', () => {
+  it('need 800 g with a 400 g tin -> count 2, spare null (exact fill)', () => {
+    // 800 / 400 = 2 packs, total 800 g, spare 0 -> null.
+    const list = buildShoppingList(
+      { recipeIds: ['r1'], householdSize: 2 },
+      packRecipe('choppedTomatoes', 800, 'g'),
+      ING_PACK,
+    )
+    const tom = item(list, 'Tinned & Jarred', 'Chopped tomatoes')
+    expect(tom.pack).toEqual({
+      packLabel: '400 g tin',
+      count: 2,
+      buyLabel: '2 × 400 g tin',
+      spare: null,
+    })
+  })
+
+  it('a bare weight label gets the size prefixed -> "500 g pack"', () => {
+    const list = buildShoppingList(
+      { recipeIds: ['r1'], householdSize: 2 },
+      packRecipe('mince', 600, 'g'),
+      ING_PACK,
+    )
+    const m = item(list, 'Meat & Fish', 'Minced beef')
+    expect(m.pack.packLabel).toBe('500 g pack')
+    expect(m.pack.buyLabel).toBe('2 × 500 g pack')
+  })
+
+  it('a single-unit count pack (size 1) is suppressed -> pack null', () => {
+    // 25 rashers with a size-1 "pack of rashers" must NOT render "25 × pack".
+    const list = buildShoppingList(
+      { recipeIds: ['r1'], householdSize: 2 },
+      packRecipe('looseBacon', 25, 'count'),
+      ING_PACK,
+    )
+    const bacon = item(list, 'Meat & Fish', 'Bacon')
+    expect(bacon.pack).toBeNull()
+  })
+
+  it('need 200 g with a 500 g bag -> count 1, spare "300 g spare"', () => {
+    // ceil(200/500) = 1 pack, total 500 g, spare 300 g (>= 5) -> "300 g spare".
+    const list = buildShoppingList(
+      { recipeIds: ['r1'], householdSize: 2 },
+      packRecipe('pastaBag', 200, 'g'),
+      ING_PACK,
+    )
+    const pasta = item(list, 'Dry & Baking', 'Pasta')
+    expect(pasta.pack).toEqual({
+      packLabel: '500 g bag',
+      count: 1,
+      buyLabel: '1 × 500 g bag',
+      spare: '300 g spare',
+    })
+  })
+
+  it('need 1100 g with a 500 g pack -> count 3, spare "400 g spare"', () => {
+    // ceil(1100/500) = 3 packs, total 1500 g, spare 400 g -> "400 g spare".
+    const list = buildShoppingList(
+      { recipeIds: ['r1'], householdSize: 2 },
+      packRecipe('pastaBag', 1100, 'g'),
+      ING_PACK,
+    )
+    const pasta = item(list, 'Dry & Baking', 'Pasta')
+    expect(pasta.pack.count).toBe(3)
+    expect(pasta.pack.buyLabel).toBe('3 × 500 g bag')
+    expect(pasta.pack.spare).toBe('400 g spare')
+  })
+
+  it('7 eggs with a "box of 6" -> count 2, buyLabel "2 × box of 6", spare "5 spare"', () => {
+    // ceil(7/6) = 2 boxes, total 12, spare 5 (>= 1) -> "5 spare".
+    const list = buildShoppingList(
+      { recipeIds: ['r1'], householdSize: 2 },
+      packRecipe('egg', 7, 'count'),
+      ING_PACK,
+    )
+    const e = item(list, 'Dairy & Eggs', 'Egg')
+    expect(e.pack).toEqual({
+      packLabel: 'box of 6',
+      count: 2,
+      buyLabel: '2 × box of 6',
+      spare: '5 spare',
+    })
+  })
+
+  it('computes the pack from the POST min-purchase need (bump then pack)', () => {
+    // need 4 g bumps to the 250 g minimum; pack is the 250 g jar -> count 1,
+    // total 250 g, spare 0 -> null. The pack reflects the bumped need, not 4 g.
+    const list = buildShoppingList(
+      { recipeIds: ['r1'], householdSize: 2 },
+      packRecipe('groundGinger', 4, 'g'),
+      ING_PACK,
+    )
+    const gg = item(list, 'Herbs & Spices', 'Ground ginger')
+    expect(gg.note).toBe('(min 250 g)')
+    expect(gg.pack).toEqual({
+      packLabel: '250 g jar',
+      count: 1,
+      buyLabel: '1 × 250 g jar',
+      spare: null,
+    })
+  })
+
+  it('no usable pack -> pack: null', () => {
+    const list = buildShoppingList(
+      { recipeIds: ['r1'], householdSize: 2 },
+      packRecipe('onion', 3, 'count'),
+      ING_PACK,
+    )
+    const o = item(list, 'Produce', 'Onion')
+    expect(o.pack).toBeNull()
+  })
+
+  it('pack unit mismatch -> pack: null (no fabricated conversion)', () => {
+    // honey item is in g; its only pack is 340 ml -> unit mismatch -> null.
+    const list = buildShoppingList(
+      { recipeIds: ['r1'], householdSize: 2 },
+      packRecipe('honey', 100, 'g'),
+      ING_PACK,
+    )
+    const h = item(list, 'Dry & Baking', 'Honey')
+    expect(h.pack).toBeNull()
+  })
+
+  it('falls back to typicalPacks[0] and friendlyPackLabel when no defaultPack/label', () => {
+    // rice: no defaultPack, typicalPacks[0] = 250 g, label '' -> friendly label.
+    // need 300 g -> ceil(300/250) = 2 packs, total 500 g, spare 200 g.
+    const list = buildShoppingList(
+      { recipeIds: ['r1'], householdSize: 2 },
+      packRecipe('rice', 300, 'g'),
+      ING_PACK,
+    )
+    const r = item(list, 'Dry & Baking', 'Rice')
+    expect(r.pack).toEqual({
+      packLabel: '250 g',
+      count: 2,
+      buyLabel: '2 × 250 g',
+      spare: '200 g spare',
+    })
+  })
+
+  it('negligible spare below the threshold -> spare: null', () => {
+    // need 498 g with a 500 g bag -> 1 pack, spare 2 g (< 5) -> null.
+    const list = buildShoppingList(
+      { recipeIds: ['r1'], householdSize: 2 },
+      packRecipe('pastaBag', 498, 'g'),
+      ING_PACK,
+    )
+    const pasta = item(list, 'Dry & Baking', 'Pasta')
+    expect(pasta.pack.count).toBe(1)
+    expect(pasta.pack.spare).toBeNull()
+  })
+
+  it('attaches the pack to Optional extras items', () => {
+    const list = buildShoppingList(
+      { recipeIds: ['r1'], householdSize: 2 },
+      packRecipe('soySauce', 100, 'ml', { optional: true }),
+      ING_PACK,
+    )
+    const opt = section(list, APPENDIX_SECTIONS.OPTIONAL)
+    const soy = opt.items.find((i) => i.name === 'Soy sauce')
+    // ceil(100/150) = 1 bottle, total 150 ml, spare 50 ml -> "50 ml spare".
+    expect(soy.pack).toEqual({
+      packLabel: '150 ml bottle',
+      count: 1,
+      buyLabel: '1 × 150 ml bottle',
+      spare: '50 ml spare',
+    })
+  })
+
+  it('leaves pack: null on Store-cupboard staples even when a pack is defined', () => {
+    const list = buildShoppingList(
+      { recipeIds: ['r1'], householdSize: 2 },
+      packRecipe('salt', null, 'g', { staple: true }),
+      ING_PACK,
+    )
+    const sc = section(list, APPENDIX_SECTIONS.STORE_CUPBOARD)
+    const salt = sc.items.find((i) => i.name === 'Salt')
+    expect(salt.pack).toBeNull()
+  })
+
+  it('leaves pack: null on "Check these yourself" needsReview items', () => {
+    const recipes = {
+      r1: {
+        id: 'r1',
+        title: 'Mystery',
+        servingsBase: 2,
+        ingredients: [
+          { raw: '1 cup coriander', ingredientId: null, quantityInBaseUnit: null, baseUnit: null, resolutionStatus: 'needsReview', optional: false, staple: false, displayOrder: 0 },
+        ],
+      },
+    }
+    const list = buildShoppingList({ recipeIds: ['r1'], householdSize: 2 }, recipes, ING_PACK)
+    const nr = section(list, APPENDIX_SECTIONS.NEEDS_REVIEW)
+    expect(nr.items[0].pack).toBeNull()
   })
 })
