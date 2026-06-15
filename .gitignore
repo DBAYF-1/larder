@@ -9,3 +9,5 @@ dist/
 firebase-debug.log
 ingestion/node_modules/
 coverage/
+# regenerable ingestion scratch (produced by scripts/measureGap + trueGap)
+ingestion/data/_*.json

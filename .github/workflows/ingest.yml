@@ -12,9 +12,9 @@ on:
   workflow_dispatch:
     inputs:
       limit:
-        description: 'Meals per category to pull (seed runs keep this small)'
+        description: 'Optional total cap on TheMealDB meals (blank = full corpus)'
         required: false
-        default: '8'
+        default: ''
   push:
     branches: [main]
     paths:
@@ -46,4 +46,12 @@ jobs:
           THEMEALDB_KEY: ${{ secrets.THEMEALDB_KEY }}
           EDAMAM_ID: ${{ secrets.EDAMAM_ID }}
           EDAMAM_KEY: ${{ secrets.EDAMAM_KEY }}
-        run: node ingest.js --source themealdb --limit "${{ github.event.inputs.limit || '8' }}"
+          LIMIT: ${{ github.event.inputs.limit }}
+        # Full corpus + curated each run; contentHash diffing makes it idempotent
+        # (only changed docs are written, so this stays well under the free quota).
+        run: |
+          if [ -n "$LIMIT" ]; then
+            node ingest.js --source all --limit "$LIMIT"
+          else
+            node ingest.js --source all
+          fi

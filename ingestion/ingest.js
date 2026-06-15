@@ -1,6 +1,6 @@
 // Larder ingestion CLI.
 //
-//   node ingest.js [--source themealdb|edamam|all] [--limit N] [--dry-run]
+//   node ingest.js [--source themealdb|curated|edamam|all] [--limit N] [--dry-run]
 //
 // Flow (CONTRACTS.md §6):
 //   1. init Admin SDK
@@ -26,19 +26,28 @@ import { buildIngredientDocs } from './pipeline/ingredientsDoc.js'
 import { buildRecipeDoc } from './pipeline/buildRecipe.js'
 import { buildIndex } from './pipeline/resolve.js'
 import { pullTheMealDb } from './sources/themealdb.js'
+import { fetchCurated } from './sources/curated.js'
 import { pullEdamam } from './sources/edamam.js'
 
 // ── CLI args ────────────────────────────────────────────────────────────────
+// Default source is 'all' (full corpus + curated + Edamam-if-keyed). --limit is
+// OPTIONAL now: when omitted, TheMealDB pulls its full corpus; when given, it
+// caps the TOTAL number of TheMealDB meals.
 function parseArgs(argv) {
-  const args = { source: 'themealdb', limit: 8, dryRun: false }
+  const args = { source: 'all', limit: Infinity, limitSet: false, dryRun: false }
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i]
     if (a === '--source') args.source = argv[++i]
-    else if (a === '--limit') args.limit = Number(argv[++i])
-    else if (a === '--dry-run' || a === '--dryRun') args.dryRun = true
+    else if (a === '--limit') {
+      args.limit = Number(argv[++i])
+      args.limitSet = true
+    } else if (a === '--dry-run' || a === '--dryRun') args.dryRun = true
     else if (a === '--help' || a === '-h') args.help = true
   }
-  if (!Number.isFinite(args.limit) || args.limit <= 0) args.limit = 8
+  if (args.limitSet && (!Number.isFinite(args.limit) || args.limit <= 0)) {
+    args.limit = Infinity
+    args.limitSet = false
+  }
   return args
 }
 
@@ -47,8 +56,8 @@ const HELP = `Larder ingestion
 Usage: node ingest.js [options]
 
 Options:
-  --source <themealdb|edamam|all>  source(s) to pull (default: themealdb)
-  --limit <N>                      meals per TheMealDB category (default: 8)
+  --source <themealdb|curated|edamam|all>  source(s) to pull (default: all)
+  --limit <N>                      TOTAL cap on TheMealDB meals (default: full corpus)
   --dry-run                        run the pipeline, print stats, write nothing
   -h, --help                       show this help
 
@@ -75,7 +84,8 @@ async function main() {
     console.warn('  ! error', JSON.stringify(e))
   }
 
-  log(`\nLarder ingestion — source=${args.source} limit=${args.limit}${args.dryRun ? ' (dry run)' : ''}`)
+  const limitLabel = args.limitSet ? args.limit : 'full corpus'
+  log(`\nLarder ingestion — source=${args.source} limit=${limitLabel}${args.dryRun ? ' (dry run)' : ''}`)
 
   // Build the resolver index once (shared by every recipe).
   const index = buildIndex(INGREDIENTS)
@@ -97,15 +107,27 @@ async function main() {
 
   if (want('themealdb')) {
     try {
+      // --limit caps the TheMealDB TOTAL; omitted => full corpus (Infinity).
       const meals = await pullTheMealDb({ limit: args.limit, log, onError })
       sourceRecipes = sourceRecipes.concat(meals)
     } catch (err) {
       onError({ stage: 'pullTheMealDb', message: err.message })
     }
   }
+  if (want('curated')) {
+    try {
+      const meals = await fetchCurated({ log, onError })
+      sourceRecipes = sourceRecipes.concat(meals)
+    } catch (err) {
+      onError({ stage: 'fetchCurated', message: err.message })
+    }
+  }
   if (want('edamam')) {
     try {
-      const meals = await pullEdamam({ limit: args.limit * 4, log, onError })
+      // Edamam stays wired but only runs when EDAMAM_ID/KEY are set (it returns
+      // [] and logs "Edamam skipped (no keys)" otherwise — exactly as before).
+      const edamamCap = Number.isFinite(args.limit) ? args.limit * 4 : 120
+      const meals = await pullEdamam({ limit: edamamCap, log, onError })
       sourceRecipes = sourceRecipes.concat(meals)
     } catch (err) {
       onError({ stage: 'pullEdamam', message: err.message })

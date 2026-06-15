@@ -1,17 +1,28 @@
 // TheMealDB source adapter.
 //
-// Flow:
+// Flow (FULL corpus):
 //   1. list.php?c=list           -> all category names
-//   2. filter.php?c={category}   -> meal stubs (id, name, thumb) per category
-//   3. lookup.php?i={id}         -> full meal (instructions, 20 ingredient slots)
+//   2. list.php?a=list           -> all area (cuisine) names
+//   3. filter.php?c={category}   -> meal stubs per category
+//      filter.php?a={area}       -> meal stubs per area
+//      => union + dedupe meal IDs across BOTH axes (~669 distinct meals)
+//   4. lookup.php?i={id}         -> full meal (instructions, 20 ingredient slots)
 //
 // We map strIngredient1..20 / strMeasure1..20 into raw ingredient lines. The
 // free test key "1" works for every endpoint; pass THEMEALDB_KEY to override.
 //
-// Network is resilient: a failed category or lookup is logged and skipped, never
-// aborting the run. Per-meal failures are surfaced to the caller via onError.
+// Throttle: TheMealDB allows 60 requests / 10 s. We pace at ~210 ms between
+// requests (<= ~5 req/s) and, on a 429, back off and retry — so a full-corpus
+// pull stays well inside the rate limit.
+//
+// Network is resilient: a failed category/area or lookup is logged and skipped,
+// never aborting the run. Per-meal failures are surfaced to the caller via
+// onError.
 
 const BASE = (key) => `https://www.themealdb.com/api/json/v1/${key}/`
+
+// Minimum spacing between any two requests: ~5 req/s, inside the 60/10s budget.
+const REQUEST_SPACING_MS = 210
 
 function apiKey() {
   return process.env.THEMEALDB_KEY && process.env.THEMEALDB_KEY.trim()
@@ -22,13 +33,36 @@ function apiKey() {
 // Polite throttle so a seed run doesn't hammer the free endpoint.
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
 
-async function fetchJson(url, { retries = 2 } = {}) {
+// Single shared pacer: every fetch awaits its turn so the whole adapter — across
+// categories, areas and lookups — never exceeds REQUEST_SPACING_MS spacing.
+let _nextSlot = 0
+async function pace() {
+  const now = Date.now()
+  const wait = Math.max(0, _nextSlot - now)
+  _nextSlot = Math.max(now, _nextSlot) + REQUEST_SPACING_MS
+  if (wait > 0) await sleep(wait)
+}
+
+async function fetchJson(url, { retries = 3 } = {}) {
   let lastErr
   for (let attempt = 0; attempt <= retries; attempt++) {
+    await pace()
     try {
       const res = await fetch(url, {
         headers: { accept: 'application/json' },
       })
+      if (res.status === 429) {
+        // Rate limited: back off harder (the 60/10s window is ~10s wide) and
+        // retry. Push the shared pacer forward so concurrent calls wait too.
+        const backoff = 1500 * (attempt + 1)
+        _nextSlot = Date.now() + backoff
+        lastErr = new Error(`HTTP 429 (rate limited) for ${url}`)
+        if (attempt < retries) {
+          await sleep(backoff)
+          continue
+        }
+        throw lastErr
+      }
       if (!res.ok) throw new Error(`HTTP ${res.status} for ${url}`)
       return await res.json()
     } catch (err) {
@@ -45,6 +79,12 @@ export async function listCategories(key = apiKey()) {
   return (data?.meals || []).map((m) => m.strCategory).filter(Boolean)
 }
 
+/** List all area (cuisine) names (list.php?a=list). */
+export async function listAreas(key = apiKey()) {
+  const data = await fetchJson(`${BASE(key)}list.php?a=list`)
+  return (data?.meals || []).map((m) => m.strArea).filter(Boolean)
+}
+
 /** Meal stubs for a category (filter.php?c=). */
 export async function listMealsInCategory(category, key = apiKey()) {
   const data = await fetchJson(
@@ -55,6 +95,19 @@ export async function listMealsInCategory(category, key = apiKey()) {
     title: m.strMeal,
     imageUrl: m.strMealThumb,
     category,
+  }))
+}
+
+/** Meal stubs for an area (filter.php?a=). */
+export async function listMealsInArea(area, key = apiKey()) {
+  const data = await fetchJson(
+    `${BASE(key)}filter.php?a=${encodeURIComponent(area)}`,
+  )
+  return (data?.meals || []).map((m) => ({
+    sourceId: m.idMeal,
+    title: m.strMeal,
+    imageUrl: m.strMealThumb,
+    area,
   }))
 }
 
@@ -136,25 +189,33 @@ export function mapMeal(meal) {
 }
 
 /**
- * Pull meals from TheMealDB.
+ * Pull the FULL TheMealDB corpus.
+ *
+ * IDs are gathered from ALL categories (filter.php?c=) AND ALL areas
+ * (filter.php?a=), then deduped — the union covers every meal the free API
+ * exposes (~669). Each distinct meal is looked up once. Requests are paced at
+ * <= ~5/s (see pace()) with 429 back-off, so a full enumeration stays inside
+ * the 60-requests-per-10-seconds limit.
  *
  * @param {object} opts
- * @param {number} [opts.limit=8]   max meals PER CATEGORY (keeps seed runs small)
- * @param {number} [opts.maxCategories]  cap categories (default all)
+ * @param {number} [opts.limit=Infinity]  TOTAL cap on meals returned (default:
+ *   unlimited = full corpus). Caps the number of lookups, not per-category.
+ * @param {number} [opts.maxCategories]    cap categories enumerated (default all)
  * @param {(msg:string)=>void} [opts.log]
  * @param {(err:{stage:string,id?:string,message:string})=>void} [opts.onError]
  * @returns {Promise<Array<object>>} mapped source recipes
  */
 export async function pullTheMealDb({
-  limit = 8,
+  limit = Infinity,
   maxCategories,
   log = () => {},
   onError = () => {},
 } = {}) {
   const key = apiKey()
   const recipes = []
-  const seen = new Set()
+  const totalCap = Number.isFinite(limit) && limit > 0 ? limit : Infinity
 
+  // ── 1. Enumerate categories + areas ───────────────────────────────────────
   let categories = []
   try {
     categories = await listCategories(key)
@@ -163,36 +224,76 @@ export async function pullTheMealDb({
     return recipes
   }
   if (maxCategories) categories = categories.slice(0, maxCategories)
-  log(`TheMealDB: ${categories.length} categories (key "${key}", limit ${limit}/category)`)
 
-  for (const category of categories) {
-    let stubs = []
-    try {
-      stubs = await listMealsInCategory(category, key)
-    } catch (err) {
-      onError({ stage: 'filter', id: category, message: err.message })
-      continue
-    }
-
-    const take = stubs.slice(0, limit)
-    for (const stub of take) {
-      if (seen.has(stub.sourceId)) continue
-      seen.add(stub.sourceId)
-      try {
-        const meal = await lookupMeal(stub.sourceId, key)
-        if (!meal) {
-          onError({ stage: 'lookup', id: stub.sourceId, message: 'empty meal' })
-          continue
-        }
-        recipes.push(mapMeal(meal))
-      } catch (err) {
-        onError({ stage: 'lookup', id: stub.sourceId, message: err.message })
-      }
-      await sleep(120) // gentle pacing
-    }
-    log(`  ${category}: +${take.length} meals (total ${recipes.length})`)
+  let areas = []
+  try {
+    areas = await listAreas(key)
+  } catch (err) {
+    // Areas are a bonus axis; if the listing fails we still pull by category.
+    onError({ stage: 'listAreas', message: err.message })
   }
 
+  log(
+    `TheMealDB: ${categories.length} categories + ${areas.length} areas ` +
+      `(key "${key}", cap ${totalCap === Infinity ? 'all' : totalCap})`,
+  )
+
+  // ── 2. Gather + dedupe meal IDs across both axes ───────────────────────────
+  // Map id -> {sourceId, category?} so we keep a category hint for the meal
+  // (the lookup carries the authoritative strCategory anyway).
+  const idMap = new Map()
+
+  for (const category of categories) {
+    if (idMap.size >= totalCap) break
+    try {
+      const stubs = await listMealsInCategory(category, key)
+      for (const stub of stubs) {
+        if (!stub.sourceId) continue
+        if (!idMap.has(stub.sourceId)) idMap.set(stub.sourceId, stub)
+      }
+      log(`  cat ${category}: ${stubs.length} stubs (${idMap.size} unique so far)`)
+    } catch (err) {
+      onError({ stage: 'filterCategory', id: category, message: err.message })
+    }
+  }
+
+  for (const area of areas) {
+    if (idMap.size >= totalCap) break
+    try {
+      const stubs = await listMealsInArea(area, key)
+      for (const stub of stubs) {
+        if (!stub.sourceId) continue
+        if (!idMap.has(stub.sourceId)) idMap.set(stub.sourceId, stub)
+      }
+      log(`  area ${area}: ${stubs.length} stubs (${idMap.size} unique so far)`)
+    } catch (err) {
+      onError({ stage: 'filterArea', id: area, message: err.message })
+    }
+  }
+
+  // Apply the TOTAL cap to the deduped id set before we start looking up.
+  let ids = [...idMap.keys()]
+  if (Number.isFinite(totalCap)) ids = ids.slice(0, totalCap)
+  log(`TheMealDB: ${ids.length} distinct meals to look up.`)
+
+  // ── 3. Look up each distinct meal ──────────────────────────────────────────
+  let n = 0
+  for (const id of ids) {
+    n++
+    try {
+      const meal = await lookupMeal(id, key)
+      if (!meal) {
+        onError({ stage: 'lookup', id, message: 'empty meal' })
+        continue
+      }
+      recipes.push(mapMeal(meal))
+    } catch (err) {
+      onError({ stage: 'lookup', id, message: err.message })
+    }
+    if (n % 50 === 0) log(`  looked up ${n}/${ids.length} (${recipes.length} mapped)`)
+  }
+
+  log(`TheMealDB: pulled ${recipes.length} meals.`)
   return recipes
 }
 
