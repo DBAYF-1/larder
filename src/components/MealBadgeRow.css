@@ -1,0 +1,39 @@
+.larder-badges {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-2);
+  margin: 0;
+}
+
+.larder-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: var(--fs-meta);
+  color: var(--larder-slate);
+  white-space: nowrap;
+}
+
+.larder-badge__icon {
+  flex: none;
+  opacity: 0.85;
+}
+
+/* kcal reads as a quiet figure — mono ties it to the receipt language. */
+.larder-badge--mono {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Diet labels get the leaf cue (confirmations / diet — never red). */
+.larder-badge--diet {
+  padding: 0.15rem var(--sp-2);
+  border-radius: var(--radius-pill);
+  background-color: var(--larder-leaf-tint);
+  color: var(--larder-leaf);
+  font-weight: 600;
+  font-size: var(--fs-micro);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}

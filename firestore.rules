@@ -1,0 +1,38 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Public catalogue data — readable by anyone, never client-writable.
+    // All writes arrive via the Admin SDK in ingestion (GitHub Actions),
+    // which bypasses these rules.
+    match /recipes/{recipeId} {
+      allow read: if true;
+      allow write: if false;
+    }
+    match /ingredients/{ingredientId} {
+      allow read: if true;
+      allow write: if false;
+    }
+    match /facets/{facetDoc} {
+      allow read: if true;
+      allow write: if false;
+    }
+    match /system/{doc} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // Later phase (requires Auth): user-owned meal plans.
+    match /meal_plans/{planId} {
+      allow read, write: if request.auth != null
+        && request.auth.uid == resource.data.userId;
+      allow create: if request.auth != null
+        && request.auth.uid == request.resource.data.userId;
+    }
+
+    // Default deny.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

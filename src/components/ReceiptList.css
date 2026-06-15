@@ -1,0 +1,229 @@
+/* ============================================================================
+   ReceiptList — the "register shift". Quiet, structured, MONOSPACE: a till
+   receipt. This is deliberately the opposite of the appetising browse cards.
+   Colour stays near-monochrome; red/green appear only as small functional cues.
+   ============================================================================ */
+.larder-receipt {
+  background-color: var(--larder-receipt);
+  border: 1px solid var(--larder-hairline);
+  border-radius: var(--radius-md);
+  padding: var(--sp-6) var(--sp-5);
+  max-width: 640px;
+  margin-inline: auto;
+  box-shadow: var(--shadow-card);
+}
+
+.larder-receipt__list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-5);
+}
+
+.larder-receipt__section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+/* ── Department header ─────────────────────────────────────────────────── */
+.larder-receipt__aisle {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding-bottom: var(--sp-1);
+}
+
+.larder-receipt__aisle-name {
+  font-family: var(--font-mono);
+  font-size: var(--fs-meta);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--larder-ink);
+}
+
+.larder-receipt__aisle-rule {
+  flex: 1;
+  height: 0;
+  border-top: 1px dashed var(--larder-hairline);
+}
+
+.larder-receipt__aisle-count {
+  font-family: var(--font-mono);
+  font-size: var(--fs-micro);
+  color: var(--larder-slate);
+}
+
+/* ── Item rows ─────────────────────────────────────────────────────────── */
+.larder-receipt__items {
+  display: flex;
+  flex-direction: column;
+}
+
+.larder-receipt__row {
+  padding-block: var(--sp-1);
+}
+
+.larder-receipt__main {
+  display: flex;
+  align-items: baseline;
+  gap: var(--sp-3);
+  cursor: pointer;
+}
+
+/* Visually hidden native checkbox; the .box renders the tick. */
+.larder-receipt__check {
+  position: absolute;
+  opacity: 0;
+  width: 1px;
+  height: 1px;
+}
+
+.larder-receipt__box {
+  flex: none;
+  align-self: center;
+  display: inline-grid;
+  place-items: center;
+  width: 1.25rem;
+  height: 1.25rem;
+  border-radius: var(--radius-sm);
+  border: 1.5px solid var(--larder-slate);
+  background-color: var(--larder-paper);
+  color: transparent;
+  transition: background-color var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out),
+    color var(--dur-fast) var(--ease-out);
+}
+
+.larder-receipt__check:checked + .larder-receipt__box {
+  background-color: var(--larder-leaf);
+  border-color: var(--larder-leaf);
+  color: var(--larder-leaf-ink);
+}
+
+/* Keyboard focus ring on the bespoke box. */
+.larder-receipt__check:focus-visible + .larder-receipt__box {
+  outline: 3px solid var(--larder-ink);
+  outline-offset: 2px;
+}
+
+.larder-receipt__name {
+  flex: 0 1 auto;
+  font-family: var(--font-body);
+  font-size: var(--fs-body);
+  color: var(--larder-ink);
+  line-height: var(--lh-tight);
+}
+
+.larder-receipt__alt,
+.larder-receipt__note {
+  font-size: var(--fs-meta);
+  color: var(--larder-slate);
+}
+
+/* The dotted leader — fills the gap between name and quantity. */
+.larder-receipt__leader {
+  flex: 1 1 auto;
+  align-self: flex-end;
+  min-width: var(--sp-4);
+  margin-bottom: 0.28em;
+  height: 0;
+  border-bottom: 1px dotted var(--larder-hairline);
+}
+
+/* Right-aligned monospace quantity — the receipt figure. */
+.larder-receipt__qty {
+  flex: none;
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum' 1;
+  font-size: var(--fs-body);
+  font-weight: 500;
+  color: var(--larder-ink);
+  white-space: nowrap;
+  text-align: end;
+}
+
+/* Checked-off rows recede. */
+.larder-receipt__row.is-checked .larder-receipt__name,
+.larder-receipt__row.is-checked .larder-receipt__qty {
+  color: var(--larder-slate);
+  text-decoration: line-through;
+  text-decoration-color: var(--larder-hairline);
+}
+
+/* Optional extras read quieter and arrive unticked. */
+.larder-receipt__row.is-optional .larder-receipt__name {
+  color: var(--larder-slate);
+  font-style: italic;
+}
+
+/* ── "Needed for" detail ───────────────────────────────────────────────── */
+.larder-receipt__detail {
+  padding-inline-start: calc(1.25rem + var(--sp-3));
+}
+
+.larder-receipt__why {
+  font-family: var(--font-body);
+  font-size: var(--fs-micro);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--larder-slate);
+  padding: 0.1rem 0;
+  border-radius: var(--radius-sm);
+}
+
+.larder-receipt__why:hover {
+  color: var(--larder-leaf);
+}
+
+.larder-receipt__meals {
+  font-size: var(--fs-meta);
+  color: var(--larder-slate);
+  line-height: var(--lh-body);
+  margin-top: var(--sp-1);
+}
+
+.larder-receipt__meals-label {
+  font-weight: 600;
+  color: var(--larder-ink);
+}
+
+/* ── Footer total line ─────────────────────────────────────────────────── */
+.larder-receipt__footer {
+  margin-top: var(--sp-6);
+}
+
+.larder-receipt__footer-rule {
+  display: block;
+  height: 0;
+  border-top: 2px dashed var(--larder-ink);
+  margin-bottom: var(--sp-3);
+  opacity: 0.55;
+}
+
+.larder-receipt__footer-line {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: var(--fs-meta);
+  color: var(--larder-ink);
+  text-align: center;
+  letter-spacing: 0.02em;
+}
+
+.larder-receipt__footer-figure {
+  font-weight: 600;
+}
+
+@media print {
+  .larder-receipt {
+    border: 0;
+    box-shadow: none;
+    max-width: none;
+  }
+
+  .larder-receipt__why {
+    display: none;
+  }
+}

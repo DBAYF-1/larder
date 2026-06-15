@@ -1,0 +1,57 @@
+.larder-stepper {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-3);
+}
+
+.larder-stepper__label {
+  font-weight: 600;
+  color: var(--larder-ink);
+}
+
+.larder-stepper__control {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-1);
+  padding: var(--sp-1);
+  background-color: var(--larder-mist);
+  border: 1px solid var(--larder-hairline);
+  border-radius: var(--radius-pill);
+}
+
+.larder-stepper__btn {
+  display: inline-grid;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: var(--radius-pill);
+  background-color: var(--larder-paper);
+  border: 1px solid var(--larder-hairline);
+  color: var(--larder-ink);
+  transition: background-color var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out);
+}
+
+.larder-stepper__btn:hover:not(:disabled) {
+  border-color: var(--larder-ink);
+  background-color: var(--larder-paper);
+}
+
+.larder-stepper__btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.larder-stepper__value {
+  min-width: 2.5rem;
+  text-align: center;
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: var(--larder-ink);
+}
+
+.larder-stepper__suffix {
+  user-select: none;
+}

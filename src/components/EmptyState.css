@@ -1,0 +1,32 @@
+.larder-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: var(--sp-3);
+  padding: var(--sp-8) var(--sp-5);
+  max-width: 44ch;
+  margin-inline: auto;
+}
+
+.larder-empty__art {
+  color: var(--larder-slate);
+  opacity: 0.7;
+  margin-bottom: var(--sp-2);
+}
+
+.larder-empty__title {
+  font-family: var(--font-display);
+  font-size: var(--fs-title);
+  font-weight: 700;
+  color: var(--larder-ink);
+}
+
+.larder-empty__body {
+  color: var(--larder-slate);
+  line-height: var(--lh-body);
+}
+
+.larder-empty__action {
+  margin-top: var(--sp-3);
+}

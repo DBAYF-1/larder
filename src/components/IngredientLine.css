@@ -1,0 +1,69 @@
+.larder-ingredient {
+  display: flex;
+  align-items: baseline;
+  gap: var(--sp-3);
+  padding-block: var(--sp-2);
+  border-bottom: 1px solid var(--larder-hairline);
+  font-size: var(--fs-body);
+  color: var(--larder-ink);
+}
+
+.larder-ingredient:last-child {
+  border-bottom: 0;
+}
+
+.larder-ingredient.is-optional {
+  color: var(--larder-slate);
+}
+
+.larder-ingredient__bullet {
+  flex: none;
+  width: 6px;
+  height: 6px;
+  margin-top: 0.5em;
+  border-radius: var(--radius-pill);
+  background-color: var(--larder-leaf);
+}
+
+.is-optional .larder-ingredient__bullet {
+  background-color: var(--larder-slate);
+}
+
+.larder-ingredient__text {
+  flex: 1;
+  line-height: var(--lh-body);
+}
+
+/* When a canonical name backs the line, hint that it is inspectable. */
+.larder-ingredient__text.has-canonical {
+  text-decoration: underline dotted var(--larder-hairline);
+  text-underline-offset: 3px;
+  cursor: help;
+}
+
+.larder-ingredient__prep {
+  color: var(--larder-slate);
+}
+
+.larder-ingredient__tag {
+  flex: none;
+  align-self: center;
+  padding: 0.1rem var(--sp-2);
+  border-radius: var(--radius-pill);
+  font-size: var(--fs-micro);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  background-color: var(--larder-mist);
+  color: var(--larder-slate);
+}
+
+.larder-ingredient__tag--staple {
+  background-color: var(--larder-leaf-tint);
+  color: var(--larder-leaf);
+}
+
+.larder-ingredient__tag--review {
+  background-color: var(--larder-stall-tint);
+  color: var(--larder-stall);
+}

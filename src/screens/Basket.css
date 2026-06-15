@@ -1,0 +1,222 @@
+/* Basket screen — chosen meals, household stepper, live preview. */
+
+.basket {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-5);
+  padding-top: var(--sp-5);
+}
+
+.basket-head {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+.basket-title {
+  font-family: var(--font-display);
+  font-size: var(--fs-title);
+  color: var(--larder-ink);
+  margin: 0;
+  font-weight: 800;
+}
+
+.basket-sub {
+  font-family: var(--font-body);
+  font-size: var(--fs-body);
+  color: var(--larder-slate);
+  margin: 0;
+  max-width: 38rem;
+}
+
+/* ── Rows ─────────────────────────────────────────────────────────────── */
+.basket-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--larder-hairline);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: var(--larder-receipt);
+}
+
+.basket-row {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+  padding: var(--sp-3) var(--sp-4);
+  border-bottom: 1px solid var(--larder-hairline);
+}
+
+.basket-row:last-child {
+  border-bottom: none;
+}
+
+.basket-row__thumb {
+  flex: 0 0 auto;
+}
+
+.basket-row__img {
+  width: 4rem;
+  height: 4rem;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+  display: block;
+  background: var(--larder-mist);
+}
+
+.basket-row__img--ph {
+  background: var(--larder-mist);
+}
+
+.basket-row__main {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+}
+
+.basket-row__name {
+  font-family: var(--font-body);
+  font-size: var(--fs-card);
+  font-weight: 600;
+  color: var(--larder-ink);
+  text-decoration: none;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.basket-row__name:hover {
+  text-decoration: underline;
+}
+
+.basket-row__name--missing {
+  color: var(--larder-slate);
+  font-style: italic;
+  font-weight: 500;
+}
+
+.basket-row__meta {
+  font-family: var(--font-mono);
+  font-size: var(--fs-meta);
+  color: var(--larder-slate);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.basket-row__loading {
+  font-family: var(--font-body);
+  font-size: var(--fs-body);
+  color: var(--larder-slate);
+}
+
+.basket-row__remove {
+  flex: 0 0 auto;
+  font-family: var(--font-body);
+  font-size: var(--fs-meta);
+  font-weight: 600;
+  color: var(--larder-stall);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-pill);
+  padding: var(--sp-2) var(--sp-3);
+  cursor: pointer;
+  transition: background var(--dur-fast) var(--ease-out);
+}
+
+.basket-row__remove:hover {
+  background: var(--larder-stall-tint);
+}
+
+/* ── Foot: household + preview + CTA ──────────────────────────────────── */
+.basket-foot {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-5);
+  padding: var(--sp-5);
+  background: var(--larder-mist);
+  border-radius: var(--radius-md);
+}
+
+.basket-household {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-3);
+}
+
+.basket-household__label {
+  font-family: var(--font-body);
+  font-size: var(--fs-card);
+  font-weight: 600;
+  color: var(--larder-ink);
+}
+
+.basket-household__hint {
+  font-family: var(--font-body);
+  font-size: var(--fs-meta);
+  color: var(--larder-slate);
+  flex: 1 1 100%;
+}
+
+.basket-preview {
+  display: flex;
+  align-items: baseline;
+  gap: var(--sp-2);
+}
+
+.basket-preview__count {
+  font-family: var(--font-display);
+  font-size: var(--fs-title);
+  font-weight: 800;
+  color: var(--larder-leaf);
+  line-height: 1;
+}
+
+.basket-preview__label {
+  font-family: var(--font-body);
+  font-size: var(--fs-body);
+  color: var(--larder-slate);
+}
+
+.basket-make {
+  font-family: var(--font-body);
+  font-size: var(--fs-card);
+  font-weight: 700;
+  color: var(--larder-stall-ink);
+  background: var(--larder-stall);
+  border: none;
+  border-radius: var(--radius-pill);
+  padding: var(--sp-4) var(--sp-6);
+  cursor: pointer;
+  box-shadow: var(--shadow-stall);
+  transition: transform var(--dur-fast) var(--ease-out);
+}
+
+.basket-make:hover {
+  transform: translateY(-1px);
+}
+
+.basket-make:active {
+  transform: translateY(0);
+}
+
+@media (min-width: 720px) {
+  .basket-foot {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .basket-household {
+    flex: 1 1 auto;
+  }
+
+  .basket-household__hint {
+    flex-basis: 100%;
+  }
+}

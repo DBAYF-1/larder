@@ -1,0 +1,35 @@
+.larder-credit {
+  font-family: var(--font-body);
+  color: var(--larder-slate);
+  margin: 0;
+}
+
+.larder-credit a {
+  color: var(--larder-ink);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  text-decoration-thickness: 1px;
+  border-radius: var(--radius-sm);
+}
+
+.larder-credit a:hover {
+  color: var(--larder-leaf);
+}
+
+.larder-credit--footer {
+  font-size: var(--fs-meta);
+  line-height: var(--lh-body);
+  max-width: 60ch;
+}
+
+.larder-credit--inline {
+  font-size: var(--fs-meta);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.larder-credit__by {
+  font-weight: 600;
+  color: var(--larder-ink);
+}

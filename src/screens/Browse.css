@@ -1,0 +1,217 @@
+/* Browse screen — hero, rails, filtered grid. Colours via tokens only. */
+
+.browse {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-6);
+}
+
+/* ── Hero ─────────────────────────────────────────────────────────────── */
+.browse-hero {
+  padding: var(--sp-7) 0 var(--sp-2);
+  max-width: 46rem;
+}
+
+.browse-hero__eyebrow {
+  font-family: var(--font-mono);
+  font-size: var(--fs-meta);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--larder-stall);
+  margin: 0 0 var(--sp-3);
+}
+
+.browse-hero__headline {
+  font-family: var(--font-display);
+  font-size: var(--fs-hero);
+  line-height: var(--lh-tight);
+  color: var(--larder-ink);
+  margin: 0 0 var(--sp-4);
+  font-weight: 800;
+  text-wrap: balance;
+}
+
+.browse-hero__lede {
+  font-family: var(--font-body);
+  font-size: var(--fs-card);
+  line-height: var(--lh-body);
+  color: var(--larder-slate);
+  margin: 0;
+  max-width: 40rem;
+}
+
+/* ── Filter bar wrapper ───────────────────────────────────────────────── */
+.browse-filters {
+  position: sticky;
+  top: var(--header-h);
+  z-index: 20;
+  background: var(--larder-paper);
+  padding: var(--sp-3) 0;
+  border-bottom: 1px solid var(--larder-hairline);
+}
+
+/* ── Rails ────────────────────────────────────────────────────────────── */
+.browse-rails {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-7);
+}
+
+.rail__head {
+  margin-bottom: var(--sp-4);
+}
+
+.rail__title {
+  font-family: var(--font-display);
+  font-size: var(--fs-title);
+  line-height: var(--lh-tight);
+  color: var(--larder-ink);
+  margin: 0;
+  font-weight: 700;
+}
+
+.rail__blurb {
+  font-family: var(--font-body);
+  font-size: var(--fs-body);
+  color: var(--larder-slate);
+  margin: var(--sp-1) 0 0;
+}
+
+.rail__track {
+  display: flex;
+  gap: var(--sp-4);
+  overflow-x: auto;
+  scroll-snap-type: x proximity;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: var(--sp-3);
+  /* let cards breathe to the screen edge on mobile */
+  margin: 0 calc(-1 * var(--sp-4));
+  padding-inline: var(--sp-4);
+  scrollbar-width: thin;
+}
+
+.rail__item {
+  flex: 0 0 auto;
+  width: 16rem;
+  max-width: 78vw;
+  scroll-snap-align: start;
+}
+
+.rail__error {
+  font-family: var(--font-body);
+  font-size: var(--fs-body);
+  color: var(--larder-slate);
+  padding: var(--sp-4);
+}
+
+/* ── Filtered grid ────────────────────────────────────────────────────── */
+.browse-grid-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-5);
+}
+
+.browse-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+  gap: var(--sp-5);
+}
+
+.browse-grid--more {
+  margin-top: 0;
+}
+
+.browse-more {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-4) 0 var(--sp-7);
+}
+
+.browse-more__btn {
+  font-family: var(--font-body);
+  font-size: var(--fs-body);
+  font-weight: 600;
+  color: var(--larder-ink);
+  background: var(--larder-mist);
+  border: 1px solid var(--larder-hairline);
+  border-radius: var(--radius-pill);
+  padding: var(--sp-3) var(--sp-6);
+  cursor: pointer;
+  transition: background var(--dur-fast) var(--ease-out);
+}
+
+.browse-more__btn:hover:not(:disabled) {
+  background: var(--larder-hairline);
+}
+
+.browse-more__btn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.browse-more__end {
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: var(--fs-meta);
+  color: var(--larder-slate);
+  padding: var(--sp-4) 0 var(--sp-7);
+}
+
+/* ── Skeletons ────────────────────────────────────────────────────────── */
+.browse-skel {
+  border-radius: var(--radius-md);
+  background: var(--larder-mist);
+  overflow: hidden;
+}
+
+.browse-skel__img {
+  aspect-ratio: 4 / 3;
+  background: linear-gradient(
+    100deg,
+    var(--larder-mist) 30%,
+    var(--larder-hairline) 50%,
+    var(--larder-mist) 70%
+  );
+  background-size: 200% 100%;
+  animation: browse-shimmer 1.4s var(--ease-out) infinite;
+}
+
+.browse-skel__line {
+  height: 0.75rem;
+  margin: var(--sp-3) var(--sp-3) 0;
+  border-radius: var(--radius-sm);
+  background: var(--larder-hairline);
+}
+
+.browse-skel__line--title {
+  width: 75%;
+}
+
+.browse-skel__line--meta {
+  width: 45%;
+  margin-bottom: var(--sp-4);
+}
+
+@keyframes browse-shimmer {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .browse-skel__img {
+    animation: none;
+  }
+}
+
+@media (min-width: 700px) {
+  .rail__item {
+    width: 17rem;
+    max-width: none;
+  }
+}

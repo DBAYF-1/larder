@@ -1,0 +1,128 @@
+/* Sources & credits screen. Colours via tokens only. */
+
+.sources {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-6);
+  padding-top: var(--sp-5);
+  max-width: 52rem;
+}
+
+.sources-head {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}
+
+.sources-title {
+  font-family: var(--font-display);
+  font-size: var(--fs-title);
+  color: var(--larder-ink);
+  margin: 0;
+  font-weight: 800;
+}
+
+.sources-lede {
+  font-family: var(--font-body);
+  font-size: var(--fs-card);
+  line-height: var(--lh-body);
+  color: var(--larder-slate);
+  margin: 0;
+}
+
+/* ── Source cards ─────────────────────────────────────────────────────── */
+.sources-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+}
+
+.source-card {
+  background: var(--larder-mist);
+  border: 1px solid var(--larder-hairline);
+  border-radius: var(--radius-md);
+  padding: var(--sp-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}
+
+.source-card__top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--sp-2) var(--sp-4);
+  justify-content: space-between;
+}
+
+.source-card__name {
+  font-family: var(--font-display);
+  font-size: var(--fs-section);
+  color: var(--larder-ink);
+  margin: 0;
+  font-weight: 700;
+}
+
+.source-card__licence {
+  font-family: var(--font-mono);
+  font-size: var(--fs-meta);
+  color: var(--larder-leaf);
+  background: var(--larder-leaf-tint);
+  padding: var(--sp-1) var(--sp-3);
+  border-radius: var(--radius-pill);
+}
+
+.source-card__role {
+  font-family: var(--font-body);
+  font-size: var(--fs-body);
+  font-weight: 600;
+  color: var(--larder-ink);
+  margin: 0;
+}
+
+.source-card__licence-body {
+  font-family: var(--font-body);
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+  color: var(--larder-slate);
+  margin: 0;
+}
+
+.source-card__link {
+  font-family: var(--font-body);
+  font-size: var(--fs-body);
+  font-weight: 600;
+  color: var(--larder-stall);
+  text-decoration: none;
+  align-self: flex-start;
+}
+
+.source-card__link:hover {
+  text-decoration: underline;
+}
+
+/* ── Footer credit ────────────────────────────────────────────────────── */
+.sources-credit {
+  border-top: 1px solid var(--larder-hairline);
+  padding-top: var(--sp-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}
+
+.sources-credit__intro {
+  font-family: var(--font-body);
+  font-size: var(--fs-meta);
+  color: var(--larder-slate);
+  margin: 0;
+}
+
+.sources-note {
+  font-family: var(--font-body);
+  font-size: var(--fs-meta);
+  color: var(--larder-slate);
+  margin: 0;
+}

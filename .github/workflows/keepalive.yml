@@ -1,0 +1,25 @@
+name: keep-alive
+
+# GitHub disables scheduled workflows after 60 days of repository inactivity
+# and never emails you when a scheduled run fails (spec 0.4). This monthly
+# empty commit keeps the repo "active" so the ingest cron stays enabled.
+
+on:
+  schedule:
+    - cron: '0 7 1 * *' # 07:00 on the 1st of each month
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  keepalive:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Empty keep-alive commit
+        run: |
+          git config user.name "larder-keepalive[bot]"
+          git config user.email "larder-keepalive@users.noreply.github.com"
+          git commit --allow-empty -m "chore: monthly keep-alive (prevent scheduled-workflow auto-disable)"
+          git push

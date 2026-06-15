@@ -1,0 +1,17 @@
+{
+  "name": "larder-ingestion",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Larder ingestion engine — pulls recipes from TheMealDB (and optionally Edamam), runs the parse → resolve → normalise pipeline, and writes canonical ingredients, embedded recipe lines, facets and a heartbeat to Firestore.",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "ingest": "node ingest.js",
+    "seed": "node ingest.js --source themealdb --limit 8"
+  },
+  "dependencies": {
+    "firebase-admin": "^12.7.0"
+  }
+}

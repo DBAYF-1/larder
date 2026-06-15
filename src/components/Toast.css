@@ -1,0 +1,28 @@
+.larder-toast-region {
+  position: fixed;
+  inset-block-end: var(--sp-6);
+  inset-inline: 0;
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+  z-index: 100;
+}
+
+.larder-toast {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-3) var(--sp-5);
+  border-radius: var(--radius-pill);
+  background-color: var(--larder-leaf);
+  color: var(--larder-leaf-ink);
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: var(--fs-body);
+  box-shadow: var(--shadow-lift);
+  animation: larder-toast-in var(--dur-mid) var(--ease-out);
+}
+
+.larder-toast__tick {
+  flex: none;
+}

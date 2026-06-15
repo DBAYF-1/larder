@@ -1,0 +1,132 @@
+.larder-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--larder-paper);
+  border: 1px solid var(--larder-hairline);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  box-shadow: var(--shadow-card);
+  transition: box-shadow var(--dur-fast) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
+}
+
+.larder-card:hover {
+  box-shadow: var(--shadow-lift);
+  transform: translateY(-2px);
+}
+
+.larder-card__link {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.larder-card__media {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  background-color: var(--larder-mist);
+}
+
+.larder-card__img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform var(--dur-mid) var(--ease-out);
+}
+
+.larder-card__img--placeholder {
+  background: linear-gradient(
+    135deg,
+    var(--larder-mist),
+    var(--larder-hairline)
+  );
+}
+
+.larder-card:hover .larder-card__img {
+  transform: scale(1.04);
+}
+
+/* Add-to-basket micro-interaction: a brief lift of the image. */
+.larder-card__media.is-lifting {
+  animation: larder-lift var(--dur-mid) var(--ease-out);
+}
+
+.larder-card__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  padding: var(--sp-4);
+  flex: 1;
+}
+
+.larder-card__title {
+  font-family: var(--font-display);
+  font-size: var(--fs-card);
+  font-weight: 700;
+  line-height: var(--lh-tight);
+  letter-spacing: -0.01em;
+  color: var(--larder-ink);
+  /* clamp to two lines so cards stay even */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Add control: docked bottom-right of the media. Stall red to add. */
+.larder-card__add {
+  position: absolute;
+  inset-block-start: var(--sp-3);
+  inset-inline-end: var(--sp-3);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: var(--sp-2) var(--sp-3);
+  border-radius: var(--radius-pill);
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: var(--fs-meta);
+  line-height: 1;
+  background-color: var(--larder-stall);
+  color: var(--larder-stall-ink);
+  box-shadow: var(--shadow-stall);
+  transition: background-color var(--dur-fast) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
+}
+
+.larder-card__add:hover {
+  background-color: color-mix(in srgb, var(--larder-stall) 90%, var(--larder-ink));
+}
+
+.larder-card__add:active {
+  transform: scale(0.96);
+}
+
+/* Once in the basket the control flips to the leaf confirmation cue. */
+.larder-card__add.is-in-basket {
+  background-color: var(--larder-leaf);
+  color: var(--larder-leaf-ink);
+  box-shadow: none;
+}
+
+.larder-card__add.is-in-basket:hover {
+  background-color: color-mix(in srgb, var(--larder-leaf) 88%, var(--larder-ink));
+}
+
+/* ── Rail variant: fixed width for horizontal category rails ───────────── */
+.larder-card--rail {
+  flex: 0 0 auto;
+  width: 230px;
+  scroll-snap-align: start;
+}
+
+.larder-card--rail .larder-card__body {
+  padding: var(--sp-3) var(--sp-4) var(--sp-4);
+}
+
+.larder-card--rail .larder-card__title {
+  font-size: var(--fs-body);
+}

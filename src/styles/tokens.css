@@ -1,0 +1,77 @@
+/* ============================================================================
+   Larder design tokens — "The market stall ledger"
+   The single source of truth for the visual system (spec Section 11).
+   No component may hard-code a hex value; everything references these vars.
+   ============================================================================ */
+
+:root {
+  /* ── Colour (Section 11.2) ─────────────────────────────────────────────── */
+  --larder-ink: #1f2421;      /* near-black green-grey; primary text + receipt */
+  --larder-paper: #fbfaf6;    /* warm off-white base for appetising browse */
+  --larder-stall: #e8534e;    /* tomato/market red — basket, primary CTA, badge */
+  --larder-leaf: #2e6f40;     /* allotment green — confirmations, "added", diet */
+  --larder-mist: #ece9e0;     /* quiet surface: cards, dividers, receipt bg */
+  --larder-slate: #6b7066;    /* muted secondary text, captions */
+
+  /* Derived / functional */
+  --larder-stall-ink: #ffffff;       /* text on stall red */
+  --larder-leaf-ink: #ffffff;        /* text on leaf green */
+  --larder-stall-tint: #fdecec;      /* faint red wash */
+  --larder-leaf-tint: #e7f0ea;       /* faint green wash */
+  --larder-hairline: #d9d5c8;        /* divider line on paper */
+  --larder-receipt: #fcfbf7;         /* receipt paper, a touch lighter than mist */
+
+  /* ── Typography (Section 11.3) ─────────────────────────────────────────── */
+  --font-display: 'Archivo', system-ui, -apple-system, sans-serif;      /* chunky grotesque */
+  --font-body: 'Hanken Grotesk', system-ui, -apple-system, sans-serif;  /* humanist sans */
+  --font-mono: 'Spline Sans Mono', ui-monospace, 'SFMono-Regular', monospace; /* receipt */
+
+  /* Type scale — intentional jumps, not a flat ramp (Section 11.3) */
+  --fs-hero: clamp(2.4rem, 6vw, 4rem);
+  --fs-title: clamp(1.6rem, 3.5vw, 2.4rem);
+  --fs-section: 1.25rem;
+  --fs-card: 1.05rem;
+  --fs-body: 1rem;
+  --fs-meta: 0.8125rem;   /* the small monospace caption tier: serves / time / kcal */
+  --fs-micro: 0.6875rem;
+
+  --lh-tight: 1.1;
+  --lh-body: 1.5;
+
+  /* ── Space & shape ─────────────────────────────────────────────────────── */
+  --sp-1: 0.25rem;
+  --sp-2: 0.5rem;
+  --sp-3: 0.75rem;
+  --sp-4: 1rem;
+  --sp-5: 1.5rem;
+  --sp-6: 2rem;
+  --sp-7: 3rem;
+  --sp-8: 4rem;
+
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 22px;
+  --radius-pill: 999px;
+
+  --shadow-card: 0 1px 2px rgba(31, 36, 33, 0.06), 0 6px 18px rgba(31, 36, 33, 0.08);
+  --shadow-lift: 0 8px 28px rgba(31, 36, 33, 0.16);
+  --shadow-stall: 0 6px 18px rgba(232, 83, 78, 0.28);
+
+  /* Layout */
+  --maxw: 1200px;
+  --header-h: 64px;
+
+  /* Motion (Section 11.5 — restrained) */
+  --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --dur-fast: 140ms;
+  --dur-mid: 240ms;
+  --dur-collapse: 520ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --dur-fast: 0ms;
+    --dur-mid: 0ms;
+    --dur-collapse: 0ms;
+  }
+}

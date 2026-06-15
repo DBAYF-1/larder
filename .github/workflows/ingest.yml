@@ -1,0 +1,49 @@
+name: ingest
+
+# Larder ingestion runs OFF Firebase (Spark Functions cannot make outbound
+# network calls). GitHub-hosted runners have full internet, so the pipeline
+# runs here and writes to Firestore via the Admin SDK (service-account auth,
+# not a Cloud Function — the Spark outbound block never applies).
+
+on:
+  schedule:
+    # Every 6 hours, offset off the hour to dodge GitHub's peak-time delays.
+    - cron: '17 */6 * * *'
+  workflow_dispatch:
+    inputs:
+      limit:
+        description: 'Meals per category to pull (seed runs keep this small)'
+        required: false
+        default: '8'
+  push:
+    branches: [main]
+    paths:
+      - 'ingestion/**'
+      - '.github/workflows/ingest.yml'
+
+concurrency:
+  group: ingest
+  cancel-in-progress: false
+
+jobs:
+  ingest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install ingestion deps
+        working-directory: ingestion
+        run: npm install
+
+      - name: Run ingestion
+        working-directory: ingestion
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          THEMEALDB_KEY: ${{ secrets.THEMEALDB_KEY }}
+          EDAMAM_ID: ${{ secrets.EDAMAM_ID }}
+          EDAMAM_KEY: ${{ secrets.EDAMAM_KEY }}
+        run: node ingest.js --source themealdb --limit "${{ github.event.inputs.limit || '8' }}"

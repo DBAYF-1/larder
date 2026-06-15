@@ -1,0 +1,62 @@
+.larder-basket-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-2) var(--sp-4);
+  border-radius: var(--radius-pill);
+  font-family: var(--font-body);
+  font-weight: 600;
+  color: var(--larder-ink);
+  background-color: var(--larder-mist);
+  border: 1px solid transparent;
+  transition: background-color var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out);
+}
+
+.larder-basket-btn:hover {
+  background-color: var(--larder-hairline);
+}
+
+.larder-basket-btn__icon {
+  flex: none;
+}
+
+.larder-basket-btn__text {
+  font-size: var(--fs-body);
+}
+
+@media (max-width: 480px) {
+  .larder-basket-btn__text {
+    /* On narrow screens the icon + badge carry the meaning. */
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+  }
+}
+
+.larder-basket-btn__badge {
+  position: absolute;
+  top: -6px;
+  inset-inline-end: -6px;
+  min-width: 1.3rem;
+  height: 1.3rem;
+  padding-inline: 0.3rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-pill);
+  background-color: var(--larder-stall);
+  color: var(--larder-stall-ink);
+  font-family: var(--font-mono);
+  font-size: var(--fs-micro);
+  font-weight: 600;
+  line-height: 1;
+  box-shadow: var(--shadow-stall);
+}
+
+.larder-basket-btn__badge.is-ticking {
+  animation: larder-tick-up var(--dur-mid) var(--ease-out);
+}
