@@ -12,7 +12,7 @@ on:
   workflow_dispatch:
     inputs:
       limit:
-        description: 'Optional total cap on TheMealDB meals (blank = full corpus)'
+        description: 'Optional per-run recipe-write cap (blank = default ~4200; small value = smoke test)'
         required: false
         default: ''
   push:
@@ -46,9 +46,14 @@ jobs:
           THEMEALDB_KEY: ${{ secrets.THEMEALDB_KEY }}
           EDAMAM_ID: ${{ secrets.EDAMAM_ID }}
           EDAMAM_KEY: ${{ secrets.EDAMAM_KEY }}
+          EDAMAM_TIER: ${{ secrets.EDAMAM_TIER }}
           LIMIT: ${{ github.event.inputs.limit }}
-        # Full corpus + curated each run; contentHash diffing makes it idempotent
-        # (only changed docs are written, so this stays well under the free quota).
+        # --source all = full TheMealDB corpus + ALL curated sets (incl. every
+        # per-diet set), with correct facets; the Edamam sampler skips cleanly
+        # without keys. Idempotent via contentHash diffing. SWITCH TO --source
+        # mega once EDAMAM_ID/EDAMAM_KEY secrets exist — mega adds the checkpointed
+        # diet×cuisine×mealType Edamam backfill (the 10K driver, spread across runs
+        # under the free 20K writes/day cap). --limit caps the run for a smoke test.
         run: |
           if [ -n "$LIMIT" ]; then
             node ingest.js --source all --limit "$LIMIT"

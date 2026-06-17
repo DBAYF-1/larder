@@ -11,11 +11,14 @@
 // recipes outright there's no external image to scrape: we GENERATE an on-brand
 // SVG placeholder per dish as a data: URI (no network, no attribution).
 
+import { readdirSync } from 'node:fs'
+import { fileURLToPath, pathToFileURL } from 'node:url'
+import { dirname, join } from 'node:path'
 import { slugify } from '../pipeline/resolve.js'
-import mains from '../data/curated/mains.js'
-import puddings from '../data/curated/puddings.js'
-import dinners from '../data/curated/dinners.js'
-import regional from '../data/curated/regional.js'
+
+// Every .js in data/curated/ is a recipe set (mains, puddings, dinners, regional,
+// and the per-diet sets). Auto-discovered so new sets ingest with no extra wiring.
+const CURATED_DIR = join(dirname(fileURLToPath(import.meta.url)), '..', 'data', 'curated')
 
 // ── Larder brand palette (mirrors src/styles/tokens.css) ─────────────────────
 const LARDER = {
@@ -149,15 +152,19 @@ export function mapCurated(recipe) {
  * @returns {Promise<Array<object>>}
  */
 export async function fetchCurated({ log = () => {}, onError = () => {} } = {}) {
-  const source = [
-    ...(mains || []),
-    ...(puddings || []),
-    ...(dinners || []),
-    ...(regional || []),
-  ]
-  // De-dup by sourceId in case two curated files share a title.
-  const recipes = []
-  const seen = new Set()
+  const files = readdirSync(CURATED_DIR).filter((f) => f.endsWith('.js')).sort()
+  const source = []
+  for (const f of files) {
+    try {
+      const mod = await import(pathToFileURL(join(CURATED_DIR, f)).href)
+      for (const r of mod.default || mod.recipes || []) source.push(r)
+    } catch (err) {
+      onError({ stage: 'curated-load', id: f, message: err.message })
+    }
+  }
+  // De-dup by sourceId across sets; when the same dish appears in several diet
+  // files, MERGE their dietLabels so a vegan + gluten-free dish keeps both.
+  const bySourceId = new Map()
   for (const recipe of source) {
     try {
       if (!recipe || !recipe.title) {
@@ -165,16 +172,17 @@ export async function fetchCurated({ log = () => {}, onError = () => {} } = {}) 
         continue
       }
       const mapped = mapCurated(recipe)
-      if (seen.has(mapped.sourceId)) continue
-      seen.add(mapped.sourceId)
-      recipes.push(mapped)
+      const existing = bySourceId.get(mapped.sourceId)
+      if (existing) {
+        existing.dietLabels = [...new Set([...existing.dietLabels, ...mapped.dietLabels])]
+      } else {
+        bySourceId.set(mapped.sourceId, mapped)
+      }
     } catch (err) {
       onError({ stage: 'curated', id: recipe?.title, message: err.message })
     }
   }
-  log(
-    `Curated: ${recipes.length} recipes (${(mains || []).length} mains + ${(puddings || []).length} puddings` +
-      ` + ${(dinners || []).length} dinners + ${(regional || []).length} regional)`,
-  )
+  const recipes = [...bySourceId.values()]
+  log(`Curated: ${recipes.length} recipes from ${files.length} sets`)
   return recipes
 }

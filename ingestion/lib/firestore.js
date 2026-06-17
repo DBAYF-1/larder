@@ -55,6 +55,19 @@ export function serverTimestamp() {
   return _FieldValue.serverTimestamp()
 }
 
+/**
+ * Resolve ONLY the field sentinels (FieldValue/Timestamp) from firebase-admin,
+ * without standing up a credentialed Firestore handle. Idempotent. Lets the
+ * checkpointed writer/diff helpers stamp updatedAt in tests (and against a
+ * fake/emulator db) without service-account credentials. No-op once resolved.
+ */
+export async function ensureFieldSentinels() {
+  if (_FieldValue) return
+  const { FieldValue, Timestamp } = await import('firebase-admin/firestore')
+  _FieldValue = FieldValue
+  _Timestamp = Timestamp
+}
+
 async function resolveCredential() {
   const { cert, applicationDefault } = await import('firebase-admin/app')
   const raw = process.env.FIREBASE_SERVICE_ACCOUNT
@@ -188,4 +201,107 @@ export async function writeDoc(db, path, data) {
 export function getTimestampClass() {
   if (!_Timestamp) throw new Error('getTimestampClass() called before initFirestore()')
   return _Timestamp
+}
+
+// ─── Quota-safe checkpointed backfill primitives ─────────────────────────────
+//
+// The free Firestore (Spark) tier caps document writes at 20,000/day. A 10K
+// backfill therefore CANNOT run in one burst: it is spread across scheduled
+// runs, each writing AT MOST a configurable cap (default 4,500) of CHANGED docs
+// (recipes + new ingredients + facet/checkpoint deltas), then persisting a
+// cursor so the next run resumes exactly where this one stopped.
+//
+// `contentHash` diffing (above) keeps steady-state re-runs near-free: a doc
+// whose hash is unchanged is never re-written and never spends from the cap.
+
+// NOTE: the system/backfill_progress checkpoint doc (cursor, urisSeen sharding,
+// per-source/per-diet counters) is owned by lib/backfill.js — this module
+// supplies only the GENERIC quota primitives below (a per-run write budget and a
+// cap-aware diff writer), which the backfill driver composes with that state.
+
+/** Default per-run write cap. Headroom below 20K/day for re-syncs + a 2nd run. */
+export const DEFAULT_WRITE_CAP = 4500
+
+/**
+ * A mutable per-run write budget. Construct once at the start of a backfill run
+ * with the cap; every capped write goes through it so the run NEVER exceeds the
+ * cap across ALL collections (recipes + ingredients + facets) combined.
+ */
+export function makeWriteBudget(cap = DEFAULT_WRITE_CAP) {
+  let spent = 0
+  return {
+    get cap() {
+      return cap
+    },
+    get spent() {
+      return spent
+    },
+    get remaining() {
+      return Math.max(0, cap - spent)
+    },
+    /** True once the cap is reached — callers should stop harvesting. */
+    get exhausted() {
+      return spent >= cap
+    },
+    /** Record `n` writes; returns the new spent total. */
+    spend(n) {
+      spent += n
+      return spent
+    },
+  }
+}
+
+/**
+ * Capped variant of diffAndWrite. Diffs `docs` against the live collection and
+ * writes only changed/new docs, but stops once the shared `budget` is exhausted
+ * — so a single run never exceeds the per-run cap even when several collections
+ * are written in turn (pass the SAME budget to each call).
+ *
+ * Unchanged docs (contentHash match) are skipped and cost NOTHING from the
+ * budget, keeping steady-state re-runs near-free. Changed docs beyond the
+ * remaining budget are left for the next scheduled run (reported in `deferred`).
+ *
+ * `writtenDocs` returns the {id,data} of every doc that actually committed (with
+ * the original `data`, sans the stamped contentHash/updatedAt) so the caller can
+ * tally per-source / per-diet counters on the EXACT written slice — the
+ * checkpoint counts must reflect only what was billed.
+ *
+ * @param {FirebaseFirestore.Firestore} db
+ * @param {string} collectionPath
+ * @param {Array<{id:string,data:object}>} docs   desired state (no contentHash/updatedAt)
+ * @param {ReturnType<typeof makeWriteBudget>} budget  shared per-run budget
+ * @returns {Promise<{written:number, skipped:number, deferred:number, total:number, writtenDocs:Array<{id,data}>}>}
+ */
+export async function diffAndWriteCapped(db, collectionPath, docs, budget) {
+  const existing = await loadExistingHashes(db, collectionPath)
+
+  let skipped = 0
+  const changed = []
+  for (const { id, data } of docs) {
+    const hash = contentHash(data)
+    if (existing.get(id) === hash) {
+      skipped++
+      continue
+    }
+    changed.push({ id, data, hash })
+  }
+
+  // Only as many changed docs as the remaining budget allows; the rest defer.
+  const allowed = changed.slice(0, budget.remaining)
+  const deferred = changed.length - allowed.length
+
+  const writes = allowed.map(({ id, data, hash }) => ({
+    id,
+    data: { ...data, contentHash: hash, updatedAt: serverTimestamp() },
+  }))
+  await commitInBatches(db, collectionPath, writes)
+  budget.spend(allowed.length)
+
+  return {
+    written: allowed.length,
+    skipped,
+    deferred,
+    total: docs.length,
+    writtenDocs: allowed.map(({ id, data }) => ({ id, data })),
+  }
 }
