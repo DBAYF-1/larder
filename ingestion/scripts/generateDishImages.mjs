@@ -111,10 +111,12 @@ async function worker(queue) {
       const bytes = await generate(r)
       map[r.id] = `${HOST}/dishes/${r.id}.jpg`
       done += 1
-      if (done % 10 === 0) { writeFileSync(MAP_PATH, JSON.stringify(map, null, 2)); console.log(`  ${done}/${todo.length} done (${bytes} B) ${r.title}`) }
+      // Persist the map often (resumable) but log sparsely so a Monitor watch
+      // isn't flooded. Include the running fail count so cooldowns are visible.
+      if (done % 5 === 0) writeFileSync(MAP_PATH, JSON.stringify(map, null, 2))
+      if (done % 25 === 0) console.log(`PROGRESS ${done}/${todo.length} generated (${failed} failed so far)`)
     } catch (e) {
       failed += 1
-      console.log(`  FAIL ${r.title}: ${e.message}`)
     }
   }
 }
