@@ -15,10 +15,16 @@ import { readdirSync } from 'node:fs'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { dirname, join } from 'node:path'
 import { slugify } from '../pipeline/resolve.js'
+import { loadImageCache, getCachedImage } from './foodImages.js'
 
 // Every .js in data/curated/ is a recipe set (mains, puddings, dinners, regional,
 // and the per-diet sets). Auto-discovered so new sets ingest with no extra wiring.
 const CURATED_DIR = join(dirname(fileURLToPath(import.meta.url)), '..', 'data', 'curated')
+
+// Deterministic dish-image cache (real Wikipedia photos, token-free). Read once;
+// a cached real photo wins over the generated SVG placeholder. A cached `null`
+// means "checked, none found" → keep the placeholder. See scripts/fetchDishImages.mjs.
+const IMAGE_CACHE = loadImageCache()
 
 // ── Larder brand palette (mirrors src/styles/tokens.css) ─────────────────────
 const LARDER = {
@@ -116,13 +122,19 @@ export function mapCurated(recipe) {
     rawMeasure: (l.rawMeasure || '').trim(),
   }))
 
+  // Prefer a real (deterministic, cached) Wikipedia photo; fall back to the
+  // on-brand SVG placeholder. A cached entry with a url => real photo + attribution.
+  const cached = getCachedImage(title, IMAGE_CACHE)
+  const realImage = cached && cached.url ? cached : null
+
   return {
     source: 'curated',
     sourceId: `curated-${slugify(title)}`,
     title,
-    imageUrl: placeholderImage(title),
-    imageAttribution: null,
-    sourceUrl: '',
+    imageUrl: realImage ? realImage.url : placeholderImage(title),
+    imageAttribution: realImage ? realImage.attribution || null : null,
+    attributionRequired: Boolean(realImage),
+    sourceUrl: realImage?.pageUrl || '',
     instructions: (recipe.instructions || '').trim() || null,
     instructionsExternal: false,
     publisher: null,
@@ -138,7 +150,6 @@ export function mapCurated(recipe) {
       recipe.totalTimeMinutes && recipe.totalTimeMinutes > 0
         ? Math.round(recipe.totalTimeMinutes)
         : null,
-    attributionRequired: false,
     rawLines,
   }
 }

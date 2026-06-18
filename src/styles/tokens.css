@@ -27,8 +27,8 @@
   --font-mono: 'Spline Sans Mono', ui-monospace, 'SFMono-Regular', monospace; /* receipt */
 
   /* Type scale — intentional jumps, not a flat ramp (Section 11.3) */
-  --fs-hero: clamp(2.4rem, 6vw, 4rem);
-  --fs-title: clamp(1.6rem, 3.5vw, 2.4rem);
+  --fs-hero: clamp(2rem, 4.4vw, 3.1rem);
+  --fs-title: clamp(1.5rem, 3vw, 2.1rem);
   --fs-section: 1.25rem;
   --fs-card: 1.05rem;
   --fs-body: 1rem;
@@ -58,7 +58,7 @@
   --shadow-stall: 0 6px 18px rgba(232, 83, 78, 0.28);
 
   /* Layout */
-  --maxw: 1200px;
+  --maxw: 1120px;
   --header-h: 64px;
 
   /* Motion (Section 11.5 — restrained) */

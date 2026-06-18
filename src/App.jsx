@@ -5,10 +5,18 @@
 // SourceCredit and a link to /sources. Defines the five routes, importing each
 // screen from ./screens/* (those files are owned by the screens deliverable).
 
-import { Link, Outlet, Route, Routes, useNavigate } from 'react-router-dom'
+import {
+  Link,
+  Outlet,
+  Route,
+  Routes,
+  useLocation,
+  useNavigate,
+} from 'react-router-dom'
 
 import BasketButton from './components/BasketButton.jsx'
 import SourceCredit from './components/SourceCredit.jsx'
+import ErrorBoundary from './components/ErrorBoundary.jsx'
 import { useBasket } from './state/basket.js'
 
 import Browse from './screens/Browse.jsx'
@@ -49,20 +57,23 @@ function Footer() {
 }
 
 export default function App() {
+  const location = useLocation()
   return (
     <div className="larder-app">
       <Header />
 
       <main className="larder-main">
-        <Routes>
-          <Route element={<Outlet />}>
-            <Route index element={<Browse />} />
-            <Route path="meal/:id" element={<Meal />} />
-            <Route path="basket" element={<Basket />} />
-            <Route path="list" element={<ShoppingList />} />
-            <Route path="sources" element={<Sources />} />
-          </Route>
-        </Routes>
+        <ErrorBoundary routeKey={location.pathname}>
+          <Routes>
+            <Route element={<Outlet />}>
+              <Route index element={<Browse />} />
+              <Route path="meal/:id" element={<Meal />} />
+              <Route path="basket" element={<Basket />} />
+              <Route path="list" element={<ShoppingList />} />
+              <Route path="sources" element={<Sources />} />
+            </Route>
+          </Routes>
+        </ErrorBoundary>
       </main>
 
       <Footer />

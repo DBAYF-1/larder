@@ -3,13 +3,13 @@
 .browse {
   display: flex;
   flex-direction: column;
-  gap: var(--sp-6);
+  gap: var(--sp-5);
 }
 
 /* ── Hero ─────────────────────────────────────────────────────────────── */
 .browse-hero {
-  padding: var(--sp-7) 0 var(--sp-2);
-  max-width: 46rem;
+  padding: var(--sp-5) 0 var(--sp-2);
+  max-width: 44rem;
 }
 
 .browse-hero__eyebrow {
@@ -54,7 +54,7 @@
 .browse-rails {
   display: flex;
   flex-direction: column;
-  gap: var(--sp-7);
+  gap: var(--sp-6);
 }
 
 .rail__head {
@@ -113,8 +113,8 @@
 
 .browse-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
-  gap: var(--sp-5);
+  grid-template-columns: repeat(auto-fill, minmax(13.5rem, 1fr));
+  gap: var(--sp-4);
 }
 
 .browse-grid--more {
