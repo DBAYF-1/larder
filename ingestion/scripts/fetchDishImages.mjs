@@ -7,11 +7,14 @@
 //   node scripts/fetchDishImages.mjs --limit 5  # small test run (5 new fetches)
 //
 // It loads ALL curated recipe titles by importing every data/curated/*.js
-// (each `export default` array). For each title NOT already present in
-// data/dish-images.json it calls imageForDish() and writes the result back
-// incrementally — a found image as { url, attribution, pageUrl } or `null` to
-// record "checked, none found" so the title is never re-fetched. Re-running the
-// script therefore only ever fetches the still-uncached titles.
+// (each `export default` array). "Done" means a cached entry that already has a
+// real `url`; EVERYTHING ELSE (uncached titles AND entries previously cached as
+// `null`/no-url) is (re)fetched through imageForDish()'s new fallback chain, so
+// titles that found nothing under the old exact-title approach get another go.
+// Results are written back incrementally — a found image as
+// { url, attribution, pageUrl }, or `null` to record "checked, still none". A
+// re-run only ever re-attempts the entries that still lack a url, so it stays
+// resumable and converges as coverage improves.
 
 import { readdirSync, existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { fileURLToPath, pathToFileURL } from 'node:url'
@@ -25,8 +28,9 @@ const CACHE_PATH = join(HERE, '..', 'data', 'dish-images.json')
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
 
-// ~1 request/second. imageForDish may make up to ~3 sub-requests for a single
-// title (alias + primary + fallback); spacing per title keeps us well-behaved.
+// ~1 request/second. imageForDish may make up to ~4 sub-requests for a single
+// title (alias + exact + search + type fallback); spacing per title keeps us
+// well-behaved towards the Wikipedia API.
 const THROTTLE_MS = 1100
 
 function parseLimit() {
@@ -74,12 +78,19 @@ async function main() {
   const cache = loadCache()
   const { titles, fileCount } = await loadCuratedTitles()
 
-  // Only the titles not yet recorded in the cache (present key => done, even null).
-  const pending = titles.filter((t) => !(slugify(t) in cache))
+  // "Done" = a cached entry that already has a real url. Everything else is
+  // (re)fetched: never-cached titles AND entries previously recorded as null /
+  // with no url get another pass through the new fallback chain.
+  const hasUrl = (slug) => {
+    const v = cache[slug]
+    return Boolean(v && typeof v === 'object' && v.url)
+  }
+  const pending = titles.filter((t) => !hasUrl(slugify(t)))
 
   console.log(
     `Curated titles: ${titles.length} unique from ${fileCount} sets. ` +
-      `Already cached: ${titles.length - pending.length}. To fetch: ${pending.length}` +
+      `Already have an image: ${titles.length - pending.length}. ` +
+      `To (re)fetch: ${pending.length}` +
       (limit === Infinity ? '' : ` (capped at ${limit})`) +
       '.',
   )
