@@ -181,6 +181,7 @@ export default function Basket() {
                   priority
                   ratio="1/1"
                   rounded
+                  w={96}
                   className="basket-row__img"
                 />
               </Link>

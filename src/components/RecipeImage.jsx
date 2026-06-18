@@ -22,6 +22,17 @@
 import { useEffect, useRef, useState } from 'react'
 import './RecipeImage.css'
 
+// Route remote photos through wsrv.nl — a free, token-free image CDN — to
+// RESIZE to the display width and convert to lightweight WebP (e.g. a 288 KB
+// ingredient PNG becomes ~3.5 KB at 128 px). Data-URIs (our SVG placeholders)
+// and already-optimised wsrv URLs are passed through untouched.
+export function optimize(src, width) {
+  if (!src || src.startsWith('data:') || src.includes('wsrv.nl')) return src
+  const abs = src.startsWith('//') ? `https:${src}` : src
+  const w = Math.min(Math.round(width), 1600)
+  return `https://wsrv.nl/?url=${encodeURIComponent(abs)}&w=${w}&output=webp&q=72`
+}
+
 // Deterministic horizontal position for the fallback gradient, derived from the
 // alt text so the same recipe always gets the same on-brand block (stable, not
 // random — avoids flicker and keeps the wall of fallbacks visually varied).
@@ -41,6 +52,7 @@ export default function RecipeImage({
   ratio = '4/3',
   rounded = false,
   className = '',
+  w = 640,
 }) {
   // Start "near" when we should load immediately: priority images, missing
   // IntersectionObserver, or no src at all (straight to the fallback block).
@@ -147,7 +159,12 @@ export default function RecipeImage({
         near && (
           <img
             className="larder-img__img"
-            src={src}
+            src={optimize(src, w)}
+            srcSet={
+              src && !src.startsWith('data:')
+                ? `${optimize(src, w)} 1x, ${optimize(src, w * 2)} 2x`
+                : undefined
+            }
             alt={alt}
             decoding="async"
             // Deliberately NOT loading="lazy" — that is what broke loading.

@@ -68,6 +68,7 @@ export default function MealCard({
             alt={title}
             priority={priority}
             ratio={isRail ? '4/3' : '5/4'}
+            w={isRail ? 300 : 360}
             className="larder-card__image"
           />
           <span className="larder-card__media-veil" aria-hidden="true" />

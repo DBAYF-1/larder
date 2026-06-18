@@ -351,6 +351,7 @@ export default function ShoppingList() {
                   priority
                   ratio="1/1"
                   rounded
+                  w={120}
                   className="list-meal-strip__img"
                 />
                 <span className="list-meal-strip__title">

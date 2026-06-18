@@ -205,6 +205,7 @@ export default function Meal() {
           alt={recipe.title || 'Meal'}
           priority
           ratio="16/9"
+          w={820}
           className="meal-hero__media"
         />
         {showAttribution ? (

@@ -27,7 +27,7 @@
 // photo renders through <RecipeImage> so it loads reliably (never native lazy).
 import { useEffect, useState } from 'react'
 import { aisleRank } from '../lib/shopWalk.js'
-import RecipeImage from './RecipeImage.jsx'
+import RecipeImage, { optimize } from './RecipeImage.jsx'
 import './ReceiptList.css'
 
 export function ReceiptAisleHeader({ aisle, count }) {
@@ -73,16 +73,19 @@ export function ReceiptThumb({ src, name }) {
     setOkSrc(null)
     if (!src) return undefined
     let live = true
+    // Probe the OPTIMISED (resized WebP) URL, not the full-size original — a
+    // 40 px grocery thumbnail must never download a 288 KB PNG just to test it.
+    const opt = optimize(src, 72)
     const probe = new Image()
     probe.onload = () => {
-      if (live) setOkSrc(src)
+      if (live) setOkSrc(opt)
     }
     probe.onerror = () => {
       // Leave okSrc null → the dot stands in. Never the loud gradient block.
     }
-    probe.src = src
+    probe.src = opt
     // Some browsers fire onload before the handler attaches for cached/data URIs.
-    if (probe.complete && probe.naturalWidth > 0) setOkSrc(src)
+    if (probe.complete && probe.naturalWidth > 0) setOkSrc(opt)
     return () => {
       live = false
       probe.onload = null
@@ -98,6 +101,7 @@ export function ReceiptThumb({ src, name }) {
         priority
         ratio="1/1"
         rounded
+        w={72}
         className="larder-receipt__thumb"
       />
     )

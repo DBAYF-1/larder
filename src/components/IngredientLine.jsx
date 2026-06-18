@@ -49,6 +49,7 @@ export default function IngredientLine({ line, imageUrl = null }) {
           alt=""
           ratio="1/1"
           rounded
+          w={72}
           className="larder-ingredient__img"
         />
       </span>
