@@ -32,8 +32,11 @@ if (!KEY) { console.error('POLLINATIONS_KEY is required'); process.exit(1) }
 const args = process.argv.slice(2)
 const getArg = (k, d) => { const i = args.indexOf(k); return i >= 0 ? args[i + 1] : d }
 const LIMIT = parseInt(getArg('--limit', '500'), 10)
-const CONCURRENCY = parseInt(getArg('--concurrency', '5'), 10)
-const PACE = parseInt(getArg('--pace', '900'), 10)
+const CONCURRENCY = parseInt(getArg('--concurrency', '8'), 10)
+// The authenticated tier allows ~1 request START every ~7s, with several
+// generations (each ~40s) running concurrently. So we STAGGER starts by a global
+// interval and let workers overlap — throughput ≈ 1/interval (~8/min at 7.5s).
+const INTERVAL = parseInt(getArg('--interval', '7500'), 10)
 
 mkdirSync(DISH_DIR, { recursive: true })
 const map = existsSync(MAP_PATH) ? JSON.parse(readFileSync(MAP_PATH, 'utf8')) : {}
@@ -42,6 +45,17 @@ admin.initializeApp({ credential: admin.credential.applicationDefault(), project
 const db = admin.firestore()
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
+
+// Global start-gate: guarantees >= INTERVAL ms between any two request starts,
+// even across concurrent workers (the synchronous reserve is race-free in JS).
+let nextSlot = 0
+async function gate() {
+  const now = Date.now()
+  const start = Math.max(now, nextSlot)
+  nextSlot = start + INTERVAL
+  const wait = start - now
+  if (wait > 0) await sleep(wait)
+}
 const stableSeed = (s) => { let h = 0; for (const c of String(s)) h = (h * 31 + c.charCodeAt(0)) | 0; return Math.abs(h) % 1_000_000 }
 
 function buildPrompt(r) {
@@ -92,18 +106,16 @@ async function worker(queue) {
   for (;;) {
     const r = queue.shift()
     if (!r) return
+    await gate() // stagger this request's START by the global interval
     try {
       const bytes = await generate(r)
       map[r.id] = `${HOST}/dishes/${r.id}.jpg`
       done += 1
-      if (done % 10 === 0) { writeFileSync(MAP_PATH, JSON.stringify(map, null, 2)); console.log(`  ${done}/${todo.length} (${bytes} B) ${r.title}`) }
+      if (done % 10 === 0) { writeFileSync(MAP_PATH, JSON.stringify(map, null, 2)); console.log(`  ${done}/${todo.length} done (${bytes} B) ${r.title}`) }
     } catch (e) {
       failed += 1
       console.log(`  FAIL ${r.title}: ${e.message}`)
-      await sleep(1500)
     }
-    // Gentle pacing between requests to respect the rate limit.
-    await sleep(PACE)
   }
 }
 const queue = todo.slice()
