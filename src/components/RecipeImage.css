@@ -1,0 +1,114 @@
+/* RecipeImage — the reliable image primitive.
+   Co-located styles, tokens only (no hex literals). The wrapper is a fixed
+   aspect-ratio box so there is zero layout shift; the <img> covers it and
+   fades in once decoded; a skeleton shimmers until then; an on-brand gradient
+   block stands in if the source ever fails. */
+
+.larder-img {
+  position: relative;
+  display: block;
+  width: 100%;
+  overflow: hidden;
+  /* aspect-ratio is set inline from the `ratio` prop. */
+  background-color: var(--larder-mist);
+  /* Reserve the box even before paint so the tap target always exists. */
+  line-height: 0;
+}
+
+.larder-img--rounded {
+  border-radius: var(--radius-md);
+}
+
+/* ── The image ───────────────────────────────────────────────────────────── */
+.larder-img__img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  /* Fade in once decoded (onLoad flips .is-loaded on the wrapper). A touch of
+     scale settles it into place — disabled under reduced motion via tokens. */
+  opacity: 0;
+  transform: scale(1.02);
+  transition:
+    opacity var(--dur-mid) var(--ease-out),
+    transform var(--dur-slow) var(--ease-emph);
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.larder-img.is-loaded .larder-img__img {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* ── Skeleton shimmer ────────────────────────────────────────────────────── */
+.larder-img__skeleton {
+  position: absolute;
+  inset: 0;
+  display: block;
+  background: linear-gradient(
+    100deg,
+    var(--larder-mist) 30%,
+    var(--larder-hairline) 50%,
+    var(--larder-mist) 70%
+  );
+  background-size: 220% 100%;
+  animation: larder-img-shimmer 1.4s var(--ease-out) infinite;
+}
+
+@keyframes larder-img-shimmer {
+  from {
+    background-position: 180% 0;
+  }
+  to {
+    background-position: -80% 0;
+  }
+}
+
+/* ── On-brand fallback block (never blank/broken) ────────────────────────── */
+/* Market-stall red → leaf green → ink, with a deterministic horizontal anchor
+   (--larder-img-pos, set inline from the alt hash) so every recipe gets a
+   stable, varied block. */
+.larder-img__fallback {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: flex-end;
+  padding: var(--sp-3);
+  background:
+    radial-gradient(
+      120% 140% at var(--larder-img-pos, 50%) -20%,
+      var(--larder-stall),
+      transparent 60%
+    ),
+    linear-gradient(150deg, var(--larder-leaf), var(--larder-ink));
+  line-height: var(--lh-snug);
+}
+
+.larder-img__fallback-text {
+  font-family: var(--font-display);
+  font-size: var(--fs-card);
+  font-weight: 600;
+  letter-spacing: var(--ls-tight);
+  color: var(--larder-paper);
+  /* Keep long titles tidy on the block. */
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-shadow: 0 1px 2px rgba(31, 36, 33, 0.4);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .larder-img__skeleton {
+    animation: none;
+  }
+  .larder-img__img {
+    transition: opacity var(--dur-fast) linear;
+    transform: none;
+  }
+  .larder-img.is-loaded .larder-img__img {
+    transform: none;
+  }
+}

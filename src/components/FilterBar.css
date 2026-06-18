@@ -1,34 +1,276 @@
+/* ============================================================================
+   FilterBar — delivery-app pattern (Just Eat / Deliveroo / Uber Eats)
+
+   Two parts:
+     1. A SLIM bar (~56px): a horizontally FLICKABLE row of primary chips
+        (course + top cuisines) + a "Filters" trigger button (active badge).
+     2. A COLLAPSIBLE panel (closed by default) with the full control set.
+
+   The panel is an ABSOLUTE overlay — it must NEVER grow the slim bar, because
+   the parent .browse-filters wrapper is itself position:sticky. A flow panel
+   would re-create the old "filter blocks the screen / tiles unclickable" bug.
+   ============================================================================ */
+
 .larder-filterbar {
+  position: relative;
+  display: block;
+}
+
+/* ── 1. Slim bar ─────────────────────────────────────────────────────────── */
+.larder-filterbar__bar {
   display: flex;
-  flex-direction: column;
-  gap: var(--sp-3);
-  padding: var(--sp-4);
-  background-color: var(--larder-mist);
+  align-items: center;
+  gap: var(--sp-2);
+  min-height: 56px;
+}
+
+/* The flickable rail: single row, momentum scroll, snap, no wrap, fading edges. */
+.larder-filterbar__rail {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-2) var(--sp-1);
+  overflow-x: auto;
+  overflow-y: hidden;
+  flex-wrap: nowrap;
+  scroll-snap-type: x proximity;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+  /* Hide the scrollbar (overrides the global thin scrollbar). */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  /* Fade the edges so chips appear to flow off-screen — the delivery-app cue. */
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent 0,
+    #000 var(--sp-4),
+    #000 calc(100% - var(--sp-5)),
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to right,
+    transparent 0,
+    #000 var(--sp-4),
+    #000 calc(100% - var(--sp-5)),
+    transparent 100%
+  );
+}
+
+.larder-filterbar__rail::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+/* A hairline divider between the course chips and cuisine chips in the rail. */
+.larder-filterbar__sep {
+  flex: 0 0 auto;
+  align-self: center;
+  width: 1px;
+  height: 22px;
+  margin: 0 var(--sp-1);
+  background-color: var(--larder-hairline);
+  scroll-snap-align: none;
+}
+
+/* ── Trigger button ──────────────────────────────────────────────────────── */
+.larder-filterbar__trigger-wrap {
+  flex: 0 0 auto;
+  position: relative;
+  /* Soft fade so the rail's last chip slides under the button cleanly. */
+  padding-inline-start: var(--sp-2);
+}
+
+.larder-filterbar__trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  min-height: 44px;
+  padding: var(--sp-2) var(--sp-4);
+  border-radius: var(--radius-pill);
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: var(--fs-meta);
+  line-height: 1.2;
+  color: var(--larder-ink);
+  background-color: var(--larder-elevated);
   border: 1px solid var(--larder-hairline);
-  border-radius: var(--radius-md);
-  /* Stays put below the header so you can keep filtering while you scroll the
-     sections below. Height-capped with internal scroll so it never covers the
-     whole viewport on small screens. */
-  position: sticky;
-  top: calc(var(--header-h) + var(--sp-2));
-  z-index: 20;
-  max-height: calc(100dvh - var(--header-h) - var(--sp-5));
-  overflow-y: auto;
+  box-shadow: var(--shadow-soft);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: border-color var(--dur-fast) var(--ease-out),
+    background-color var(--dur-fast) var(--ease-out),
+    box-shadow var(--dur-mid) var(--ease-out);
+}
+
+.larder-filterbar__trigger:hover {
+  border-color: var(--larder-slate);
+}
+
+.larder-filterbar__trigger.has-active {
+  border-color: var(--larder-ink);
   box-shadow: var(--shadow-card);
 }
 
-.larder-filterbar__head {
+.larder-filterbar__trigger[aria-expanded='true'] {
+  background-color: var(--larder-ink);
+  border-color: var(--larder-ink);
+  color: var(--larder-paper);
+}
+
+.larder-filterbar__trigger-icon {
+  flex: 0 0 auto;
+}
+
+.larder-filterbar__trigger-label {
+  display: inline-block;
+}
+
+.larder-filterbar__badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: var(--radius-pill);
+  background-color: var(--larder-stall);
+  color: var(--larder-stall-ink);
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: var(--fs-micro);
+  line-height: 1;
+}
+
+/* On the expanded (dark) trigger, keep the badge legible against ink. */
+.larder-filterbar__trigger[aria-expanded='true'] .larder-filterbar__badge {
+  background-color: var(--larder-paper);
+  color: var(--larder-ink);
+}
+
+/* ── Chip ──────────────────────────────────────────────────────────────── */
+.larder-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
+  padding: var(--sp-2) var(--sp-4);
+  border-radius: var(--radius-pill);
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: var(--fs-meta);
+  line-height: 1.2;
+  white-space: nowrap;
+  color: var(--larder-ink);
+  background-color: var(--larder-elevated);
+  border: 1px solid color-mix(in srgb, var(--larder-hairline) 80%, transparent);
+  box-shadow: var(--shadow-soft);
+  cursor: pointer;
+  transition: background-color var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out),
+    color var(--dur-fast) var(--ease-out),
+    box-shadow var(--dur-mid) var(--ease-out),
+    transform var(--dur-mid) var(--ease-spring);
+}
+
+/* Chips inside the flickable rail snap and never shrink. */
+.larder-chip--snap {
+  flex: 0 0 auto;
+  scroll-snap-align: start;
+}
+
+.larder-chip:hover {
+  border-color: var(--larder-slate);
+  transform: translateY(-1px);
+}
+
+.larder-chip.is-active {
+  background-color: var(--larder-ink);
+  border-color: var(--larder-ink);
+  color: var(--larder-paper);
+  box-shadow: var(--shadow-card);
+}
+
+/* ── 2. Collapsible panel ────────────────────────────────────────────────── */
+/* A dim scrim behind the panel (mostly felt on mobile bottom-sheet). */
+.larder-filterbar__scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  background-color: color-mix(in srgb, var(--larder-ink) 38%, transparent);
+  animation: larder-fade-in var(--dur-mid) var(--ease-out);
+}
+
+.larder-filterbar__panel {
+  position: absolute;
+  z-index: 40;
+  top: calc(100% + var(--sp-2));
+  inset-inline-end: 0;
+  width: min(420px, calc(100vw - var(--sp-5)));
+  max-height: min(70dvh, 560px);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--larder-elevated);
+  border: 1px solid var(--larder-hairline);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lift);
+  animation: larder-pop-in var(--dur-mid) var(--ease-emph);
+  transform-origin: top right;
+}
+
+.larder-filterbar__panel[hidden] {
+  display: none;
+}
+
+.larder-filterbar__panel-head {
+  position: sticky;
+  top: 0;
+  z-index: 1;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: var(--sp-4);
-  flex-wrap: wrap;
+  gap: var(--sp-3);
+  padding: var(--sp-4);
+  background-color: var(--larder-elevated);
+  border-bottom: 1px solid var(--larder-hairline);
 }
 
-.larder-filterbar__groups {
+.larder-filterbar__panel-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--fs-section);
+  font-weight: 700;
+  letter-spacing: var(--ls-tight);
+  color: var(--larder-ink);
+}
+
+.larder-filterbar__close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  margin: calc(-1 * var(--sp-2));
+  border-radius: var(--radius-pill);
+  color: var(--larder-slate);
+  background: transparent;
+  cursor: pointer;
+  transition: background-color var(--dur-fast) var(--ease-out),
+    color var(--dur-fast) var(--ease-out);
+}
+
+.larder-filterbar__close:hover {
+  background-color: var(--larder-mist);
+  color: var(--larder-ink);
+}
+
+.larder-filterbar__panel-body {
   display: flex;
   flex-direction: column;
-  gap: var(--sp-4);
+  gap: var(--sp-5);
+  padding: var(--sp-4);
 }
 
 .larder-facet {
@@ -38,6 +280,13 @@
   display: flex;
   flex-direction: column;
   gap: var(--sp-2);
+}
+
+.larder-facet--sort {
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
 }
 
 .larder-facet__legend {
@@ -53,39 +302,6 @@
   display: flex;
   flex-wrap: wrap;
   gap: var(--sp-2);
-}
-
-/* ── Chip ──────────────────────────────────────────────────────────────── */
-.larder-chip {
-  display: inline-flex;
-  align-items: center;
-  padding: var(--sp-2) var(--sp-4);
-  border-radius: var(--radius-pill);
-  font-family: var(--font-body);
-  font-weight: 600;
-  font-size: var(--fs-meta);
-  line-height: 1.2;
-  color: var(--larder-ink);
-  background-color: var(--larder-elevated);
-  border: 1px solid color-mix(in srgb, var(--larder-hairline) 80%, transparent);
-  box-shadow: var(--shadow-soft);
-  transition: background-color var(--dur-fast) var(--ease-out),
-    border-color var(--dur-fast) var(--ease-out),
-    color var(--dur-fast) var(--ease-out),
-    box-shadow var(--dur-mid) var(--ease-out),
-    transform var(--dur-mid) var(--ease-spring);
-}
-
-.larder-chip:hover {
-  border-color: var(--larder-slate);
-  transform: translateY(-1px);
-}
-
-.larder-chip.is-active {
-  background-color: var(--larder-ink);
-  border-color: var(--larder-ink);
-  color: var(--larder-paper);
-  box-shadow: var(--shadow-card);
 }
 
 /* ── Sort select ───────────────────────────────────────────────────────── */
@@ -110,6 +326,7 @@
 .larder-sort__select {
   appearance: none;
   -webkit-appearance: none;
+  min-height: 44px;
   padding: var(--sp-2) calc(var(--sp-6)) var(--sp-2) var(--sp-4);
   border-radius: var(--radius-pill);
   background-color: var(--larder-paper);
@@ -132,9 +349,17 @@
   color: var(--larder-slate);
 }
 
-/* ── Foot / clear ──────────────────────────────────────────────────────── */
-.larder-filterbar__foot {
+/* ── Panel foot: Clear / Apply ───────────────────────────────────────────── */
+.larder-filterbar__panel-foot {
+  position: sticky;
+  bottom: 0;
   display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  padding: var(--sp-4);
+  background-color: var(--larder-elevated);
+  border-top: 1px solid var(--larder-hairline);
 }
 
 .larder-filterbar__clear {
@@ -144,10 +369,117 @@
   color: var(--larder-stall);
   text-decoration: underline;
   text-underline-offset: 2px;
-  padding: var(--sp-1) var(--sp-2);
+  padding: var(--sp-2) var(--sp-2);
+  min-height: 44px;
   border-radius: var(--radius-sm);
+  cursor: pointer;
 }
 
 .larder-filterbar__clear:hover {
-  color: color-mix(in srgb, var(--larder-stall) 80%, var(--larder-ink));
+  color: var(--larder-stall-press);
+}
+
+.larder-filterbar__clear:disabled {
+  color: var(--larder-slate);
+  text-decoration: none;
+  cursor: default;
+  opacity: 0.6;
+}
+
+.larder-filterbar__apply {
+  flex: 0 0 auto;
+  min-height: 44px;
+  padding: var(--sp-2) var(--sp-5);
+  border-radius: var(--radius-pill);
+  background-color: var(--larder-ink);
+  color: var(--larder-paper);
+  border: 1px solid var(--larder-ink);
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: var(--fs-meta);
+  cursor: pointer;
+  transition: background-color var(--dur-fast) var(--ease-out),
+    transform var(--dur-mid) var(--ease-spring);
+}
+
+.larder-filterbar__apply:hover {
+  transform: translateY(-1px);
+}
+
+.larder-filterbar__apply:active {
+  transform: translateY(0);
+}
+
+/* ── Animations ──────────────────────────────────────────────────────────── */
+@keyframes larder-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes larder-pop-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .larder-filterbar__scrim,
+  .larder-filterbar__panel {
+    animation: none;
+  }
+  .larder-chip,
+  .larder-filterbar__apply {
+    transition: background-color var(--dur-fast) var(--ease-out),
+      border-color var(--dur-fast) var(--ease-out),
+      color var(--dur-fast) var(--ease-out);
+  }
+}
+
+/* ── Mobile: the panel becomes a bottom sheet ────────────────────────────── */
+@media (max-width: 560px) {
+  .larder-filterbar__panel {
+    position: fixed;
+    z-index: 40;
+    inset: auto 0 0 0;
+    top: auto;
+    width: 100%;
+    max-height: 82dvh;
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    border-bottom: 0;
+    transform-origin: bottom center;
+    animation: larder-sheet-up var(--dur-mid) var(--ease-emph);
+    /* Respect the home-indicator safe area on phones. */
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  .larder-filterbar__panel-foot {
+    /* Keep Apply above the safe-area inset. */
+    padding-bottom: calc(var(--sp-4) + env(safe-area-inset-bottom, 0px));
+  }
+
+  @keyframes larder-sheet-up {
+    from {
+      opacity: 0;
+      transform: translateY(16px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .larder-filterbar__panel {
+      animation: none;
+    }
+  }
 }

@@ -5,9 +5,32 @@ import { getRecipe, getIngredients } from '../lib/queryRecipes.js'
 import { buildShoppingList } from '../lib/buildShoppingList.js'
 import { useBasket } from '../state/basket.js'
 import ReceiptList from '../components/ReceiptList.jsx'
+import RecipeImage from '../components/RecipeImage.jsx'
 import EmptyState from '../components/EmptyState.jsx'
 import Toast from '../components/Toast.jsx'
 import './ShoppingList.css'
+
+// TheMealDB serves a free ingredient photo at a name-keyed URL:
+//   https://www.themealdb.com/images/ingredients/{Name}.png
+// Ingredient docs are MEANT to carry a resolved `imageUrl`, but where the
+// ingestion layer hasn't populated one yet we derive a candidate from the
+// canonical name so the list still reads with photos rather than rows of dots.
+// We Title-Case the name (TheMealDB's convention) and URL-encode it. If the
+// derived photo 404s, RecipeImage degrades to its on-brand block; genuine
+// no-name items keep the quiet monochrome dot.
+const MEALDB_INGREDIENT_BASE =
+  'https://www.themealdb.com/images/ingredients/'
+
+function mealdbIngredientUrl(name) {
+  const clean = String(name || '').trim()
+  if (!clean) return null
+  // Title Case each word — "cheddar cheese" -> "Cheddar Cheese" — matching how
+  // TheMealDB names its ingredient image files.
+  const titled = clean
+    .toLowerCase()
+    .replace(/\b([a-z])/g, (m, c) => c.toUpperCase())
+  return `${MEALDB_INGREDIENT_BASE}${encodeURIComponent(titled)}.png`
+}
 
 // Collect every referenced ingredientId across the basketed recipe docs.
 function collectIngredientIds(recipes) {
@@ -163,6 +186,21 @@ export default function ShoppingList() {
     }
   }, [recipes, ingredients, householdSize])
 
+  // Ingredient-photo lookup for the receipt. Each ingredient doc is meant to
+  // carry an `imageUrl` (a free TheMealDB ingredient photo). We prefer that;
+  // where it is absent we derive a candidate from the canonical name (same free
+  // TheMealDB source). ReceiptList falls back to a monochrome dot when there is
+  // no ingredient/name at all, so a row is never blank.
+  const imageFor = useCallback(
+    (ingredientId) => {
+      const doc = ingredientId ? ingredients[ingredientId] : null
+      if (!doc) return null
+      if (doc.imageUrl) return doc.imageUrl
+      return mealdbIngredientUrl(doc.canonicalName)
+    },
+    [ingredients],
+  )
+
   // The signature moment: once the list is ready and we arrived from the
   // basket, flip from "meals" to "collapsed receipt" on the next frame so the
   // CSS transition runs. Under prefers-reduced-motion the durations are 0 (see
@@ -307,19 +345,14 @@ export default function ShoppingList() {
           <ul className="list-meal-strip">
             {meals.map((m) => (
               <li className="list-meal-strip__item" key={m.id}>
-                {m.imageUrl ? (
-                  <img
-                    src={m.imageUrl}
-                    alt=""
-                    loading="lazy"
-                    className="list-meal-strip__img"
-                  />
-                ) : (
-                  <span
-                    className="list-meal-strip__img list-meal-strip__img--ph"
-                    aria-hidden="true"
-                  />
-                )}
+                <RecipeImage
+                  src={m.imageUrl}
+                  alt=""
+                  priority
+                  ratio="1/1"
+                  rounded
+                  className="list-meal-strip__img"
+                />
                 <span className="list-meal-strip__title">
                   {m.title || 'Untitled meal'}
                 </span>
@@ -329,7 +362,7 @@ export default function ShoppingList() {
         </div>
 
         <div className="list-collapse__receipt">
-          <ReceiptList list={list} />
+          <ReceiptList list={list} imageFor={imageFor} />
         </div>
       </div>
 

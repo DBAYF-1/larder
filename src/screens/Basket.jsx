@@ -5,6 +5,7 @@ import { getRecipe, getIngredients } from '../lib/queryRecipes.js'
 import { buildShoppingList } from '../lib/buildShoppingList.js'
 import { useBasket } from '../state/basket.js'
 import HouseholdStepper from '../components/HouseholdStepper.jsx'
+import RecipeImage from '../components/RecipeImage.jsx'
 import EmptyState from '../components/EmptyState.jsx'
 import './Basket.css'
 
@@ -168,21 +169,21 @@ export default function Basket() {
           const isLoading = loadingMeals && doc === undefined
           return (
             <li className="basket-row" key={id}>
-              <div className="basket-row__thumb">
-                {doc?.imageUrl ? (
-                  <img
-                    src={doc.imageUrl}
-                    alt=""
-                    loading="lazy"
-                    className="basket-row__img"
-                  />
-                ) : (
-                  <div
-                    className="basket-row__img basket-row__img--ph"
-                    aria-hidden="true"
-                  />
-                )}
-              </div>
+              <Link
+                to={`/meal/${id}`}
+                className="basket-row__thumb"
+                aria-label={doc?.title ? `Open ${doc.title}` : 'Open meal'}
+                tabIndex={doc ? 0 : -1}
+              >
+                <RecipeImage
+                  src={doc?.imageUrl}
+                  alt=""
+                  priority
+                  ratio="1/1"
+                  rounded
+                  className="basket-row__img"
+                />
+              </Link>
 
               <div className="basket-row__main">
                 {isLoading ? (
@@ -222,9 +223,8 @@ export default function Basket() {
 
       <div className="basket-foot">
         <div className="basket-household">
-          <span className="basket-household__label" id="household-label">
-            Cooking for
-          </span>
+          {/* HouseholdStepper renders its own "Cooking for" label + "people"
+              suffix, so we don't repeat the label here — just the scaling hint. */}
           <HouseholdStepper
             value={householdSize}
             onChange={setHouseholdSize}
@@ -250,7 +250,27 @@ export default function Basket() {
           className="basket-make"
           onClick={handleMakeList}
         >
-          Make my shopping list
+          <svg
+            viewBox="0 0 24 24"
+            width="20"
+            height="20"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+            className="basket-make__icon"
+          >
+            <path d="M3 6h18M3 12h18M3 18h12" />
+            <path d="M19 16l2 2 3-3" />
+          </svg>
+          <span className="basket-make__label">Make my shopping list</span>
+          {itemCount > 0 ? (
+            <span className="basket-make__count">
+              {itemCount} {itemCount === 1 ? 'item' : 'items'}
+            </span>
+          ) : null}
         </button>
       </div>
     </div>

@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { db } from '../firebase.js'
-import { getRecipe } from '../lib/queryRecipes.js'
+import { getRecipe, getIngredients } from '../lib/queryRecipes.js'
 import { useBasket } from '../state/basket.js'
+import RecipeImage from '../components/RecipeImage.jsx'
 import MealBadgeRow from '../components/MealBadgeRow.jsx'
 import IngredientLine from '../components/IngredientLine.jsx'
 import SourceCredit from '../components/SourceCredit.jsx'
@@ -51,6 +52,10 @@ export default function Meal() {
 
   const [recipe, setRecipe] = useState(null)
   const [status, setStatus] = useState('loading') // loading | ready | missing | error
+  // Map of ingredientId -> imageUrl (TheMealDB ingredient photo). Populated from
+  // the referenced canonical docs once the recipe is in hand. Lines fall back
+  // gracefully (RecipeImage's on-brand block) when an id is absent or null.
+  const [ingredientImages, setIngredientImages] = useState({})
   const [toast, setToast] = useState(false)
   const toastTimer = useRef(null)
 
@@ -58,6 +63,7 @@ export default function Meal() {
     let live = true
     setStatus('loading')
     setRecipe(null)
+    setIngredientImages({})
     if (!id) {
       setStatus('missing')
       return undefined
@@ -79,6 +85,40 @@ export default function Meal() {
       live = false
     }
   }, [id])
+
+  // Once the recipe is ready, fetch the referenced ingredient docs so we can show
+  // a small photo on each line. This is a best-effort enhancement: any failure
+  // simply leaves the thumbnails on their clean fallback — the line still works.
+  useEffect(() => {
+    if (!recipe) return undefined
+    const ids = (Array.isArray(recipe.ingredients) ? recipe.ingredients : [])
+      .map((line) => line?.ingredientId)
+      .filter(Boolean)
+    if (ids.length === 0) {
+      setIngredientImages({})
+      return undefined
+    }
+    let live = true
+    getIngredients(db, ids)
+      .then((docs) => {
+        if (!live) return
+        // getIngredients returns a keyed map; tolerate an array too.
+        const entries = Array.isArray(docs)
+          ? docs.filter(Boolean).map((d) => [d.id, d])
+          : Object.entries(docs || {})
+        const map = {}
+        for (const [ingId, doc] of entries) {
+          if (doc && doc.imageUrl) map[ingId] = doc.imageUrl
+        }
+        setIngredientImages(map)
+      })
+      .catch(() => {
+        if (live) setIngredientImages({})
+      })
+    return () => {
+      live = false
+    }
+  }, [recipe])
 
   useEffect(
     () => () => {
@@ -142,30 +182,31 @@ export default function Meal() {
   }
 
   const publisher = recipe.publisher || 'the publisher'
-  const showAttribution =
-    recipe.attributionRequired && recipe.imageAttribution
+  const showAttribution = recipe.attributionRequired && recipe.imageAttribution
   const external = recipe.instructionsExternal === true
 
   return (
     <article className="meal">
       <p className="meal-back">
         <Link to="/" className="meal-back__link">
-          &larr; Back to browse
+          <span className="meal-back__arrow" aria-hidden="true">
+            &larr;
+          </span>
+          Back to browse
         </Link>
       </p>
 
-      {/* Hero image with optional attribution overlay. */}
+      {/* Hero image — rendered through RecipeImage with priority so it paints
+          immediately (never the old broken native lazy img). Fixed 16/9 box =
+          zero layout shift; attribution overlays the bottom-right. */}
       <div className="meal-hero">
-        {recipe.imageUrl ? (
-          <img
-            className="meal-hero__img"
-            src={recipe.imageUrl}
-            alt={recipe.title || 'Meal'}
-            loading="lazy"
-          />
-        ) : (
-          <div className="meal-hero__placeholder" aria-hidden="true" />
-        )}
+        <RecipeImage
+          src={recipe.imageUrl}
+          alt={recipe.title || 'Meal'}
+          priority
+          ratio="16/9"
+          className="meal-hero__media"
+        />
         {showAttribution ? (
           <p className="meal-hero__attr">{recipe.imageAttribution}</p>
         ) : null}
@@ -207,9 +248,7 @@ export default function Meal() {
             )}
           </button>
           {inBasket ? (
-            <span className="meal-actions__hint">
-              Tap again to remove it.
-            </span>
+            <span className="meal-actions__hint">Tap again to remove it.</span>
           ) : null}
         </div>
 
@@ -229,6 +268,11 @@ export default function Meal() {
                   <IngredientLine
                     key={`${line?.ingredientId || line?.raw || 'line'}-${i}`}
                     line={line}
+                    imageUrl={
+                      line?.ingredientId
+                        ? ingredientImages[line.ingredientId] || null
+                        : null
+                    }
                   />
                 ))}
               </ul>

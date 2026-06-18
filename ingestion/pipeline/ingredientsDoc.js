@@ -4,9 +4,136 @@
 // The seed is authoring-friendly; this adds the contract fields (id, variants,
 // defaultPack, cofidCode, nutrientProfilePer100) and validates the aisle.
 
+import { existsSync, readFileSync } from 'node:fs'
 import { slugify } from './resolve.js'
 import { isValidAisle } from '../lib/shopWalk.js'
 import { readOffPacksSync, hasParsedPack } from '../sources/openfoodfacts.js'
+
+// ---------------------------------------------------------------------------
+// Ingredient photos — TheMealDB ingredient image CDN (free, no key).
+//
+//   https://www.themealdb.com/images/ingredients/{Name}.png
+//
+// Reliability note (verified against the live CDN): the CDN ONLY serves a photo
+// for an ingredient name that appears in TheMealDB's own `list.php?i=list` set.
+// Plausible-but-absent names (Cauliflower, Halloumi, Okra, Nori, Bagel, …) all
+// 404. So we match a canonical ingredient ONLY against that authoritative name
+// set — cached locally in data/themealdb-ingredients.json (927 names) — and set
+// imageUrl=null on a miss so the UI (RecipeImage) falls back cleanly. We never
+// fabricate a URL from a name TheMealDB does not actually have an image for.
+// ---------------------------------------------------------------------------
+
+const MEALDB_IMG_BASE = 'https://www.themealdb.com/images/ingredients/'
+const MEALDB_NAMES_URL = new URL('../data/themealdb-ingredients.json', import.meta.url)
+
+/** Normalise a name for matching: lower-case, strip accents/punctuation, squash spaces. */
+function normName(s) {
+  return String(s || '')
+    .toLowerCase()
+    .normalize('NFKD')
+    .replace(/[̀-ͯ]/g, '')
+    .replace(/['’.()]/g, '')
+    .replace(/[^a-z0-9]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
+/** Singularise only the LAST word of a normalised phrase ("seeds"->"seed"). */
+function singulariseLast(s) {
+  const words = s.split(' ')
+  let last = words[words.length - 1]
+  if (/ies$/.test(last)) last = last.replace(/ies$/, 'y')
+  else if (/(ch|sh|ss|x)es$/.test(last)) last = last.replace(/es$/, '')
+  else if (/[^s]s$/.test(last) && last.length > 3) last = last.slice(0, -1)
+  words[words.length - 1] = last
+  return words.join(' ')
+}
+
+// Curated aliases: canonical name (slug) -> a TheMealDB name that BOTH exists in
+// the list set AND is a faithful photo for the ingredient. Conservative on
+// purpose — only where the photo genuinely depicts the thing (no misleading
+// stand-ins). Keyed by slug so spelling/casing of the canonical name can vary.
+const IMAGE_ALIASES = {
+  'sesame-oil': 'Sesame Seed Oil',
+  'wholemeal-flour': 'Strong Wholemeal Flour',
+  'sage-and-onion-stuffing-mix': 'Sage',
+  'blanched-almonds': 'Almonds',
+  'almond-butter': 'Almonds',
+  'arborio-rice': 'Rice',
+  'cauliflower-rice': 'Rice',
+  'beluga-lentils': 'Lentils',
+  'mango-chutney': 'Mango',
+  'sourdough-bread': 'Bread',
+  'lamb-liver': 'Lamb',
+}
+
+/**
+ * Load the authoritative TheMealDB ingredient-name set and index it by several
+ * normalised forms (exact, singular-last). Built once. Defensive: an absent or
+ * corrupt cache yields an empty index (every ingredient then resolves to null).
+ *
+ * @returns {{ byNorm: Map<string,string> }}
+ */
+function loadMealDbNameIndex() {
+  const byNorm = new Map()
+  try {
+    if (!existsSync(MEALDB_NAMES_URL)) return { byNorm }
+    const raw = JSON.parse(readFileSync(MEALDB_NAMES_URL, 'utf8'))
+    const names = Array.isArray(raw) ? raw.map((x) => x && x.name).filter(Boolean) : []
+    for (const name of names) {
+      const k = normName(name)
+      if (k && !byNorm.has(k)) byNorm.set(k, name)
+      const sk = singulariseLast(k)
+      if (sk && !byNorm.has(sk)) byNorm.set(sk, name)
+    }
+  } catch {
+    // leave byNorm empty — clean misses, never throw during a build
+  }
+  return { byNorm }
+}
+
+const MEALDB_INDEX = loadMealDbNameIndex()
+
+/** Build the CDN URL for a (verified) TheMealDB ingredient name. */
+function mealDbImageUrl(mealDbName) {
+  // Spaces -> %20 etc.; the CDN expects the exact name, percent-encoded.
+  return MEALDB_IMG_BASE + encodeURIComponent(mealDbName) + '.png'
+}
+
+/**
+ * Resolve a TheMealDB ingredient photo URL for a canonical ingredient.
+ *
+ * Match ladder (first hit wins), all against the authoritative list set:
+ *   1. curated slug ALIAS  -> faithful in-list TheMealDB name
+ *   2. EXACT (canonicalName then each synonym), normalised
+ *   3. SINGULAR-LAST of canonicalName / synonyms
+ * No confident, in-list match => null (UI falls back to a placeholder).
+ *
+ * @param {object} ing  a seed ingredient ({ canonicalName, synonyms? })
+ * @param {{ byNorm: Map<string,string> }} [index]  defaults to the cached index
+ * @returns {string|null}  a CDN PNG URL, or null when TheMealDB has no photo
+ */
+export function ingredientImageUrl(ing, index = MEALDB_INDEX) {
+  if (!ing || !ing.canonicalName) return null
+  const { byNorm } = index
+
+  // 1) Curated alias by slug.
+  const slug = slugify(ing.canonicalName)
+  const aliasName = IMAGE_ALIASES[slug]
+  if (aliasName) return mealDbImageUrl(aliasName)
+
+  // 2) + 3) Exact then singular-last across canonicalName + synonyms.
+  const candidates = [ing.canonicalName, ...(Array.isArray(ing.synonyms) ? ing.synonyms : [])]
+  for (const cand of candidates) {
+    const k = normName(cand)
+    const exact = byNorm.get(k)
+    if (exact) return mealDbImageUrl(exact)
+    const sing = byNorm.get(singulariseLast(k))
+    if (sing) return mealDbImageUrl(sing)
+  }
+
+  return null
+}
 
 /**
  * Pick the smallest sensible curated pack for an ingredient (minimise waste):
@@ -151,6 +278,9 @@ export function buildIngredientDocs(seed) {
       synonyms: ing.synonyms || [],
       staple: Boolean(ing.staple),
       cofidCode: ing.cofidCode ?? null,
+      // TheMealDB ingredient photo (free CDN), or null where TheMealDB has none.
+      // Rendered as a small thumbnail by the UI; null falls back to a placeholder.
+      imageUrl: ingredientImageUrl(ing),
       defaultPack,
       displayRules: {
         preferUnit: ing.displayRules?.preferUnit ?? null,

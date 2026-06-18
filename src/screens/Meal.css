@@ -11,15 +11,29 @@
 }
 
 .meal-back__link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  min-height: 44px;
   font-family: var(--font-body);
   font-size: var(--fs-body);
+  font-weight: 600;
   color: var(--larder-slate);
   text-decoration: none;
 }
 
+.meal-back__arrow {
+  display: inline-flex;
+  font-weight: 700;
+  transition: transform var(--dur-fast) var(--ease-out);
+}
+
 .meal-back__link:hover {
   color: var(--larder-ink);
-  text-decoration: underline;
+}
+
+.meal-back__link:hover .meal-back__arrow {
+  transform: translateX(-2px);
 }
 
 /* ── Hero ─────────────────────────────────────────────────────────────── */
@@ -28,21 +42,20 @@
   border-radius: var(--radius-lg);
   overflow: hidden;
   background: var(--larder-mist);
-  aspect-ratio: 16 / 9;
-  max-height: 28rem;
+  box-shadow: var(--shadow-card);
 }
 
-.meal-hero__img {
+/* The hero now renders through RecipeImage (priority, ratio="16/9"): it owns
+   the aspect-ratio box, so the image paints instantly with no layout shift.
+   We cap the height on large screens so the page leads with the photo without
+   it dominating the fold. */
+.meal-hero__media {
   width: 100%;
-  height: 100%;
-  object-fit: cover;
   display: block;
 }
 
-.meal-hero__placeholder {
-  width: 100%;
-  height: 100%;
-  background: var(--larder-mist);
+.meal-hero__media .larder-img__img {
+  object-fit: cover;
 }
 
 .meal-hero__attr {
@@ -274,6 +287,8 @@
 /* ── Skeleton ─────────────────────────────────────────────────────────── */
 .meal-hero--skel {
   background: var(--larder-mist);
+  aspect-ratio: 16 / 9;
+  box-shadow: none;
 }
 
 .meal-skel-line {
@@ -308,11 +323,31 @@
   border: 0;
 }
 
+/* ── Ingredients card ─────────────────────────────────────────────────── */
+/* The ingredient list now leads with photo thumbnails, so give it a quiet
+   panel to sit in — image-led and scannable, like a delivery app. */
+.meal-ingredients__list {
+  background: var(--larder-elevated);
+  border: 1px solid var(--larder-hairline);
+  border-radius: var(--radius-md);
+  padding: var(--sp-1) var(--sp-4);
+  box-shadow: var(--shadow-soft);
+}
+
 /* ── Wider screens: two genuine columns ───────────────────────────────── */
 @media (min-width: 820px) {
   .meal-columns {
     grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
     gap: var(--sp-7);
     align-items: start;
+  }
+
+  /* Cap the hero's effective height by centring it within a max width — this
+     keeps RecipeImage's 16/9 aspect-ratio box intact (no clipping) while the
+     photo leads the page without swallowing the fold. */
+  .meal-hero {
+    max-width: 50rem;
+    margin-inline: auto;
+    width: 100%;
   }
 }

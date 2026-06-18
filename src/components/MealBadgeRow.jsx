@@ -1,6 +1,11 @@
 // <MealBadgeRow timeMinutes servings dietLabels kcal /> (CONTRACTS.md §4).
-// The small meta tier on cards + the Meal screen. Diet labels get the leaf cue;
-// time / servings / kcal are quiet captions. Gracefully omits absent values.
+//
+// The tidy meta line under a card title and on the Meal screen — delivery-app
+// style: "25 min · Serves 4 · 480 kcal" with a leaf diet cue. Time / servings /
+// kcal are quiet captions separated by middots; diet labels get the leaf pill
+// (confirmations / diet are always leaf, never red). Absent values are dropped
+// gracefully, and the whole row collapses to nothing when there's nothing to
+// show. Props and prop names are fixed by the contract; only presentation here.
 import './MealBadgeRow.css'
 
 function formatTime(minutes) {
@@ -24,64 +29,36 @@ export default function MealBadgeRow({
     Number.isFinite(kcal) && kcal > 0 ? `${Math.round(kcal)} kcal` : null
   const diets = Array.isArray(dietLabels) ? dietLabels.filter(Boolean) : []
 
-  if (!time && !serves && !energy && diets.length === 0) return null
+  // The quiet caption facts, in reading order, that get the middot leaders.
+  const facts = [
+    time && { key: 'time', text: time },
+    serves && { key: 'serves', text: serves },
+    energy && { key: 'kcal', text: energy, mono: true },
+  ].filter(Boolean)
+
+  if (facts.length === 0 && diets.length === 0) return null
 
   return (
-    <ul className="larder-badges" aria-label="At a glance">
-      {time && (
-        <li className="larder-badge">
-          <svg
-            className="larder-badge__icon"
-            viewBox="0 0 24 24"
-            width="14"
-            height="14"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.8"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            aria-hidden="true"
-          >
-            <circle cx="12" cy="12" r="9" />
-            <path d="M12 7v5l3 2" />
-          </svg>
-          <span>{time}</span>
-        </li>
-      )}
-
-      {serves && (
-        <li className="larder-badge">
-          <svg
-            className="larder-badge__icon"
-            viewBox="0 0 24 24"
-            width="14"
-            height="14"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.8"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            aria-hidden="true"
-          >
-            <path d="M16 19v-1a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v1" />
-            <circle cx="9.5" cy="8" r="3" />
-            <path d="M21 19v-1a4 4 0 0 0-3-3.85" />
-          </svg>
-          <span>{serves}</span>
-        </li>
-      )}
-
-      {energy && (
-        <li className="larder-badge larder-badge--mono">
-          <span>{energy}</span>
-        </li>
-      )}
+    <p className="larder-badges" aria-label="At a glance">
+      {facts.map((fact, i) => (
+        <span
+          key={fact.key}
+          className={'larder-badge' + (fact.mono ? ' larder-badge--mono' : '')}
+        >
+          {i > 0 && (
+            <span className="larder-badge__sep" aria-hidden="true">
+              ·
+            </span>
+          )}
+          {fact.text}
+        </span>
+      ))}
 
       {diets.map((label) => (
-        <li key={label} className="larder-badge larder-badge--diet">
+        <span key={label} className="larder-badge larder-badge--diet">
           {label}
-        </li>
+        </span>
       ))}
-    </ul>
+    </p>
   )
 }

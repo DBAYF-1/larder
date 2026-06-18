@@ -54,21 +54,24 @@
   border-bottom: none;
 }
 
+/* The thumbnail is a link to the meal. RecipeImage renders a fixed-ratio
+   wrapper (width:100%); pin it to a 4rem square so the row never shifts as the
+   photo decodes, and so the whole tile is a comfortable tap target. */
 .basket-row__thumb {
   flex: 0 0 auto;
+  display: block;
+  width: 4rem;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  outline-offset: 2px;
+}
+
+.basket-row__thumb:focus-visible {
+  outline: 3px solid var(--larder-ink);
 }
 
 .basket-row__img {
   width: 4rem;
-  height: 4rem;
-  object-fit: cover;
-  border-radius: var(--radius-sm);
-  display: block;
-  background: var(--larder-mist);
-}
-
-.basket-row__img--ph {
-  background: var(--larder-mist);
 }
 
 .basket-row__main {
@@ -149,13 +152,6 @@
   gap: var(--sp-3);
 }
 
-.basket-household__label {
-  font-family: var(--font-body);
-  font-size: var(--fs-card);
-  font-weight: 600;
-  color: var(--larder-ink);
-}
-
 .basket-household__hint {
   font-family: var(--font-body);
   font-size: var(--fs-meta);
@@ -184,6 +180,12 @@
 }
 
 .basket-make {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-3);
+  width: 100%;
+  min-height: 3.25rem;
   font-family: var(--font-body);
   font-size: var(--fs-card);
   font-weight: 700;
@@ -196,13 +198,34 @@
   );
   border: none;
   border-radius: var(--radius-pill);
-  padding: var(--sp-4) var(--sp-7);
+  padding: var(--sp-4) var(--sp-6);
   cursor: pointer;
   box-shadow: var(--shadow-stall), inset 0 1px 0 rgba(255, 255, 255, 0.28);
   transition:
     transform var(--dur-mid) var(--ease-spring),
     box-shadow var(--dur-mid) var(--ease-out),
     filter var(--dur-fast) var(--ease-out);
+}
+
+.basket-make__icon {
+  flex: none;
+}
+
+.basket-make__label {
+  white-space: nowrap;
+}
+
+/* A quiet count pill on the CTA — the delivery-app "X items" affordance. */
+.basket-make__count {
+  flex: none;
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: var(--fs-meta);
+  font-weight: 600;
+  padding: var(--sp-1) var(--sp-3);
+  border-radius: var(--radius-pill);
+  background: rgba(255, 255, 255, 0.22);
+  color: var(--larder-stall-ink);
 }
 
 .basket-make:hover {
@@ -227,5 +250,11 @@
 
   .basket-household__hint {
     flex-basis: 100%;
+  }
+
+  /* On wide screens the CTA sizes to its content rather than stretching. */
+  .basket-make {
+    width: auto;
+    flex: 0 0 auto;
   }
 }

@@ -1,8 +1,8 @@
 .larder-ingredient {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   gap: var(--sp-3);
-  padding-block: var(--sp-2);
+  padding-block: var(--sp-3);
   border-bottom: 1px solid var(--larder-hairline);
   font-size: var(--fs-body);
   color: var(--larder-ink);
@@ -16,22 +16,34 @@
   color: var(--larder-slate);
 }
 
-.larder-ingredient__bullet {
+/* ── Thumbnail ─────────────────────────────────────────────────────────────
+   A small square photo of the ingredient, rendered through RecipeImage. Sits
+   on a quiet tinted tile so a photo with a transparent background (TheMealDB
+   ingredient pngs are cut-outs) reads cleanly, and the on-brand fallback block
+   still looks intentional when there is no photo. */
+.larder-ingredient__thumb {
   flex: none;
-  width: 6px;
-  height: 6px;
-  margin-top: 0.5em;
-  border-radius: var(--radius-pill);
-  background-color: var(--larder-leaf);
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  background: var(--larder-paper-2);
+  box-shadow: inset 0 0 0 1px var(--larder-hairline);
 }
 
-.is-optional .larder-ingredient__bullet {
-  background-color: var(--larder-slate);
+.larder-ingredient__img {
+  width: 100%;
+  height: 100%;
+}
+
+/* Optional lines read quieter — gently fade the photo too. */
+.is-optional .larder-ingredient__thumb {
+  opacity: 0.72;
 }
 
 .larder-ingredient__text {
   flex: 1;
-  line-height: var(--lh-body);
+  line-height: var(--lh-snug);
 }
 
 /* When a canonical name backs the line, hint that it is inspectable. */

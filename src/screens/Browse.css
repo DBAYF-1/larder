@@ -1,4 +1,9 @@
-/* Browse screen — hero, rails, filtered grid. Colours via tokens only. */
+/* ============================================================================
+   Browse — the delivery-app home.
+   A small hero, a SLIM sticky bar (flick-chips + search + Filters sheet),
+   flickable category rails, and an image-led infinite-scroll grid.
+   Colours / spacing / type via var(--larder-*) tokens ONLY.
+   ============================================================================ */
 
 .browse {
   display: flex;
@@ -8,14 +13,14 @@
 
 /* ── Hero ─────────────────────────────────────────────────────────────── */
 .browse-hero {
-  padding: var(--sp-5) 0 var(--sp-2);
+  padding: var(--sp-4) 0 var(--sp-1);
   max-width: 44rem;
 }
 
 .browse-hero__eyebrow {
   font-family: var(--font-mono);
   font-size: var(--fs-meta);
-  letter-spacing: 0.04em;
+  letter-spacing: var(--ls-wide);
   text-transform: uppercase;
   color: var(--larder-stall);
   margin: 0 0 var(--sp-3);
@@ -25,6 +30,7 @@
   font-family: var(--font-display);
   font-size: var(--fs-hero);
   line-height: var(--lh-tight);
+  letter-spacing: var(--ls-display);
   color: var(--larder-ink);
   margin: 0 0 var(--sp-4);
   font-weight: 800;
@@ -40,14 +46,302 @@
   max-width: 40rem;
 }
 
-/* ── Filter bar wrapper ───────────────────────────────────────────────── */
-.browse-filters {
+/* ── SLIM sticky bar ──────────────────────────────────────────────────────
+   The whole bar sticks under the header. It is COMPACT: a single control row
+   (~52px) plus a flick-chip row (~44px). It never caps a large height and
+   never overlays the cards — open the sheet and content is pushed down, not
+   covered. We bleed the bar to the screen edges so the flick rows can run
+   right off the side (the delivery-app cue) while content stays in-column. */
+.browse-bar {
   position: sticky;
   top: var(--header-h);
   z-index: 20;
-  background: var(--larder-paper);
-  padding: var(--sp-3) 0;
+  /* Bleed to the main column's inline padding so chips reach the edge. */
+  margin-inline: calc(-1 * var(--sp-5));
+  padding-inline: var(--sp-5);
+  padding-block: var(--sp-2) 0;
+  background: var(--larder-glass);
+  backdrop-filter: saturate(180%) blur(12px);
+  -webkit-backdrop-filter: saturate(180%) blur(12px);
   border-bottom: 1px solid var(--larder-hairline);
+}
+
+@media (max-width: 600px) {
+  .browse-bar {
+    margin-inline: calc(-1 * var(--sp-4));
+    padding-inline: var(--sp-4);
+  }
+}
+
+.browse-bar__row {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  min-height: 44px;
+}
+
+/* Search field — grows to fill, stays comfortably tappable. */
+.browse-search {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.browse-search__icon {
+  position: absolute;
+  inset-inline-start: var(--sp-3);
+  color: var(--larder-slate);
+  pointer-events: none;
+}
+
+.browse-search__input {
+  width: 100%;
+  min-height: 44px;
+  padding: var(--sp-2) var(--sp-6) var(--sp-2) calc(var(--sp-6) + var(--sp-1));
+  font-family: var(--font-body);
+  font-size: var(--fs-body);
+  color: var(--larder-ink);
+  background: var(--larder-elevated);
+  border: 1px solid var(--larder-hairline);
+  border-radius: var(--radius-pill);
+  box-shadow: var(--shadow-soft);
+  transition: border-color var(--dur-fast) var(--ease-out),
+    box-shadow var(--dur-fast) var(--ease-out);
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.browse-search__input::placeholder {
+  color: var(--larder-slate);
+}
+
+.browse-search__input:focus-visible {
+  outline: none;
+  border-color: var(--larder-ink);
+  box-shadow: 0 0 0 3px var(--larder-stall-tint);
+}
+
+/* Hide the native search clear so ours is the only one. */
+.browse-search__input::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.browse-search__clear {
+  position: absolute;
+  inset-inline-end: var(--sp-2);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-pill);
+  color: var(--larder-slate);
+  background: transparent;
+  cursor: pointer;
+}
+
+.browse-search__clear:hover {
+  background: var(--larder-mist);
+  color: var(--larder-ink);
+}
+
+/* The Filters button (opens the sheet). Becomes stall-tinted when filters set. */
+.browse-bar__filters {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  flex: 0 0 auto;
+  min-height: 44px;
+  padding: var(--sp-2) var(--sp-4);
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: var(--fs-body);
+  color: var(--larder-ink);
+  background: var(--larder-elevated);
+  border: 1px solid var(--larder-hairline);
+  border-radius: var(--radius-pill);
+  box-shadow: var(--shadow-soft);
+  cursor: pointer;
+  transition: border-color var(--dur-fast) var(--ease-out),
+    background-color var(--dur-fast) var(--ease-out);
+}
+
+.browse-bar__filters:hover {
+  border-color: var(--larder-ink);
+}
+
+.browse-bar__filters.is-active {
+  background: var(--larder-stall-tint);
+  border-color: var(--larder-stall);
+  color: var(--larder-ink);
+}
+
+.browse-bar__count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.25rem;
+  height: 1.25rem;
+  padding: 0 var(--sp-1);
+  font-family: var(--font-mono);
+  font-size: var(--fs-micro);
+  font-weight: 700;
+  line-height: 1;
+  color: var(--larder-stall-ink);
+  background: var(--larder-stall);
+  border-radius: var(--radius-pill);
+}
+
+@media (max-width: 480px) {
+  /* On the smallest screens the Filters button collapses to its icon + count. */
+  .browse-bar__filters span:not(.browse-bar__count) {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+  }
+}
+
+/* ── Flick-chip row ───────────────────────────────────────────────────────
+   Horizontal, momentum, scroll-snap, hidden scrollbar, no wrap, edge fade. */
+.browse-chiprow {
+  position: relative;
+  /* The mask creates the edge fade on both ends — pure presentation. */
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent 0,
+    black var(--sp-4),
+    black calc(100% - var(--sp-5)),
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to right,
+    transparent 0,
+    black var(--sp-4),
+    black calc(100% - var(--sp-5)),
+    transparent 100%
+  );
+}
+
+.browse-chiprow__track {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  overflow-x: auto;
+  overflow-y: hidden;
+  flex-wrap: nowrap;
+  scroll-snap-type: x proximity;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+  padding-block: var(--sp-2);
+  /* Pad the ends so the first/last chip clear the fade. */
+  padding-inline: var(--sp-1) var(--sp-5);
+  scrollbar-width: none;
+}
+
+.browse-chiprow__track::-webkit-scrollbar {
+  display: none;
+}
+
+.browse-chiprow__item {
+  flex: 0 0 auto;
+  scroll-snap-align: start;
+}
+
+.browse-chiprow__item .larder-chip {
+  white-space: nowrap;
+}
+
+.browse-chiprow__clear {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-1);
+  padding: var(--sp-2) var(--sp-3);
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: var(--fs-meta);
+  color: var(--larder-stall);
+  background: var(--larder-stall-tint);
+  border: 1px solid color-mix(in srgb, var(--larder-stall) 35%, transparent);
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  white-space: nowrap;
+  scroll-snap-align: start;
+}
+
+.browse-chiprow__clear:hover {
+  background: color-mix(in srgb, var(--larder-stall-tint) 70%, var(--larder-stall));
+  color: var(--larder-stall-press);
+}
+
+/* ── Collapsible filter sheet ─────────────────────────────────────────────
+   Closed by default. When open it pushes content down (does NOT overlay the
+   grid), so cards stay tappable. The embedded <FilterBar> is re-housed here:
+   we neutralise its own sticky + height-cap so it lays out as flat content. */
+.browse-sheet {
+  overflow: hidden;
+}
+
+.browse-sheet.is-open {
+  animation: browse-sheet-in var(--dur-mid) var(--ease-out);
+}
+
+@keyframes browse-sheet-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.browse-sheet__inner {
+  padding-block: var(--sp-3) var(--sp-4);
+}
+
+.browse-sheet__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--sp-3);
+  margin-top: var(--sp-3);
+}
+
+/* Re-house the shared FilterBar inside the sheet: strip its sticky positioning,
+   height cap, card chrome and shadow so it reads as flat in-sheet content. The
+   component's value/onChange/facets contract is untouched — this only adjusts
+   the embedded instance's layout envelope (Browse owns this presentation). */
+.browse-filter-sheet .larder-filterbar {
+  position: static;
+  top: auto;
+  max-height: none;
+  overflow: visible;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+/* The sheet already provides the "Find a meal" / sort context; hide the inner
+   bar's own heading + its duplicate clear control to keep the sheet tidy. */
+.browse-filter-sheet .larder-filterbar__head {
+  justify-content: flex-end;
+}
+
+.browse-filter-sheet .larder-filterbar__title {
+  display: none;
+}
+
+.browse-filter-sheet .larder-filterbar__foot {
+  display: none;
 }
 
 /* ── Rails ────────────────────────────────────────────────────────────── */
@@ -58,13 +352,22 @@
 }
 
 .rail__head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--sp-4);
   margin-bottom: var(--sp-4);
+}
+
+.rail__heading {
+  min-width: 0;
 }
 
 .rail__title {
   font-family: var(--font-display);
   font-size: var(--fs-title);
   line-height: var(--lh-tight);
+  letter-spacing: var(--ls-tight);
   color: var(--larder-ink);
   margin: 0;
   font-weight: 700;
@@ -77,17 +380,83 @@
   margin: var(--sp-1) 0 0;
 }
 
+.rail__seeall {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-1);
+  min-height: 44px;
+  padding: var(--sp-2) var(--sp-3);
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: var(--fs-meta);
+  color: var(--larder-stall);
+  background: transparent;
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  transition: background-color var(--dur-fast) var(--ease-out);
+  white-space: nowrap;
+}
+
+.rail__seeall:hover {
+  background: var(--larder-stall-tint);
+}
+
+.rail__seeall svg {
+  transition: transform var(--dur-fast) var(--ease-out);
+}
+
+.rail__seeall:hover svg {
+  transform: translateX(2px);
+}
+
+/* The viewport masks the track ends for the same edge fade as the chip row. */
+.rail__viewport {
+  position: relative;
+  margin-inline: calc(-1 * var(--sp-5));
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent 0,
+    black var(--sp-5),
+    black calc(100% - var(--sp-6)),
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to right,
+    transparent 0,
+    black var(--sp-5),
+    black calc(100% - var(--sp-6)),
+    transparent 100%
+  );
+}
+
+@media (max-width: 600px) {
+  .rail__viewport {
+    margin-inline: calc(-1 * var(--sp-4));
+  }
+}
+
 .rail__track {
   display: flex;
   gap: var(--sp-4);
   overflow-x: auto;
+  overflow-y: hidden;
   scroll-snap-type: x proximity;
   -webkit-overflow-scrolling: touch;
-  padding-bottom: var(--sp-3);
-  /* let cards breathe to the screen edge on mobile */
-  margin: 0 calc(-1 * var(--sp-4));
-  padding-inline: var(--sp-4);
-  scrollbar-width: thin;
+  overscroll-behavior-x: contain;
+  padding-block: var(--sp-1) var(--sp-3);
+  padding-inline: var(--sp-5);
+  scrollbar-width: none;
+}
+
+.rail__track::-webkit-scrollbar {
+  display: none;
+}
+
+@media (max-width: 600px) {
+  .rail__track {
+    padding-inline: var(--sp-4);
+  }
 }
 
 .rail__item {
@@ -101,7 +470,7 @@
   font-family: var(--font-body);
   font-size: var(--fs-body);
   color: var(--larder-slate);
-  padding: var(--sp-4);
+  padding: var(--sp-4) var(--sp-5);
 }
 
 /* ── Filtered grid ────────────────────────────────────────────────────── */
@@ -115,6 +484,13 @@
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(13.5rem, 1fr));
   gap: var(--sp-4);
+}
+
+@media (max-width: 420px) {
+  .browse-grid {
+    grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr));
+    gap: var(--sp-3);
+  }
 }
 
 .browse-grid--more {
@@ -137,6 +513,7 @@
   background: var(--larder-mist);
   border: 1px solid var(--larder-hairline);
   border-radius: var(--radius-pill);
+  min-height: 44px;
   padding: var(--sp-3) var(--sp-6);
   cursor: pointer;
   transition: background var(--dur-fast) var(--ease-out);
@@ -159,11 +536,17 @@
   padding: var(--sp-4) 0 var(--sp-7);
 }
 
-/* ── Skeletons ────────────────────────────────────────────────────────── */
+/* ── Skeletons (no layout shift) ──────────────────────────────────────── */
 .browse-skel {
-  border-radius: var(--radius-md);
-  background: var(--larder-mist);
+  border-radius: var(--radius-lg);
+  background: var(--larder-elevated);
+  border: 1px solid color-mix(in srgb, var(--larder-hairline) 70%, transparent);
   overflow: hidden;
+}
+
+.browse-skel--rail {
+  /* matches .rail__item card footprint so swapping in real cards never shifts */
+  height: 100%;
 }
 
 .browse-skel__img {
@@ -205,6 +588,9 @@
 
 @media (prefers-reduced-motion: reduce) {
   .browse-skel__img {
+    animation: none;
+  }
+  .browse-sheet.is-open {
     animation: none;
   }
 }

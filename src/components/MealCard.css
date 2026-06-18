@@ -1,3 +1,9 @@
+/* MealCard — the delivery-app browse unit (Just Eat / Uber Eats grade).
+   Image-led, tidy, fast. Colours/spacing/type via var(--larder-*) tokens only.
+   The image renders through <RecipeImage>, which owns the aspect-ratio box and
+   the reliable load; this file owns the card frame, title, meta and the add
+   control. */
+
 .larder-card {
   position: relative;
   display: flex;
@@ -7,72 +13,87 @@
   border-radius: var(--radius-lg);
   overflow: hidden;
   box-shadow: var(--shadow-card);
-  transition: box-shadow var(--dur-mid) var(--ease-out),
+  transition:
+    box-shadow var(--dur-mid) var(--ease-out),
     transform var(--dur-mid) var(--ease-spring),
     border-color var(--dur-mid) var(--ease-out);
+  /* Promote to its own layer so the image scale + lift stay buttery on scroll. */
+  will-change: transform;
 }
 
-.larder-card:hover {
-  box-shadow: var(--shadow-lift);
-  transform: translateY(-4px);
-  border-color: color-mix(in srgb, var(--larder-hairline) 100%, transparent);
+@media (hover: hover) {
+  .larder-card:hover {
+    box-shadow: var(--shadow-lift);
+    transform: translateY(-4px);
+    border-color: color-mix(in srgb, var(--larder-hairline) 100%, transparent);
+  }
 }
 
-/* Keyboard focus on the card link lifts the whole card too. */
+/* Press feedback — the whole tile dips a touch (delivery-app tactility). */
+.larder-card:active {
+  transform: translateY(0) scale(0.992);
+}
+
+/* Keyboard focus on the inner link lifts + rings the whole card. */
 .larder-card:focus-within {
   box-shadow: var(--shadow-lift);
 }
 
+.larder-card:focus-within:not(:active) {
+  outline: 2px solid var(--larder-ink);
+  outline-offset: 2px;
+}
+
+/* The link is the tappable surface; it fills the card so the WHOLE tile opens
+   the meal. The add control sits above it (higher z-index) and stops the tap. */
 .larder-card__link {
   display: flex;
   flex-direction: column;
   flex: 1;
+  text-decoration: none;
+  color: inherit;
+  outline: none;
 }
 
+/* ── Media ───────────────────────────────────────────────────────────────── */
 .larder-card__media {
   position: relative;
-  aspect-ratio: 4 / 3;
   overflow: hidden;
-  background-color: var(--larder-mist);
 }
 
-.larder-card__img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transition: transform var(--dur-slow) var(--ease-emph);
+/* RecipeImage renders the box; let it fill the media area and zoom on hover. */
+.larder-card__image {
+  display: block;
 }
 
-/* A whisper of a gradient grounds the image against the body below. */
-.larder-card__media::after {
-  content: '';
+.larder-card__image .larder-img__img {
+  transition:
+    opacity var(--dur-mid) var(--ease-out),
+    transform var(--dur-slow) var(--ease-emph);
+}
+
+@media (hover: hover) {
+  .larder-card:hover .larder-card__image .larder-img__img {
+    transform: scale(1.06);
+  }
+}
+
+/* A whisper of a bottom veil grounds the image against the body + lifts the
+   add control's contrast wherever it sits over busy food photography. */
+.larder-card__media-veil {
   position: absolute;
   inset: 0;
   pointer-events: none;
   background: linear-gradient(
     to bottom,
-    transparent 62%,
-    rgba(31, 36, 33, 0.06)
+    rgba(31, 36, 33, 0.16) 0%,
+    transparent 26%,
+    transparent 70%,
+    rgba(31, 36, 33, 0.08) 100%
   );
 }
 
-.larder-card__img--placeholder {
-  background: linear-gradient(
-    135deg,
-    var(--larder-mist),
-    var(--larder-hairline)
-  );
-}
-
-.larder-card:hover .larder-card__img {
-  transform: scale(1.055);
-}
-
-/* Add-to-basket micro-interaction: a brief lift of the image. */
-.larder-card__media.is-lifting {
-  animation: larder-lift var(--dur-mid) var(--ease-out);
-}
-
+/* ── Body ────────────────────────────────────────────────────────────────── */
 .larder-card__body {
   display: flex;
   flex-direction: column;
@@ -82,13 +103,14 @@
 }
 
 .larder-card__title {
+  margin: 0;
   font-family: var(--font-display);
   font-size: var(--fs-card);
   font-weight: 700;
   line-height: var(--lh-tight);
   letter-spacing: var(--ls-tight);
   color: var(--larder-ink);
-  /* clamp to two lines so cards stay even */
+  /* Two clean lines keeps every card the same height in the grid. */
   display: -webkit-box;
   -webkit-line-clamp: 2;
   line-clamp: 2;
@@ -96,54 +118,113 @@
   overflow: hidden;
 }
 
-/* Add control: docked bottom-right of the media. Stall red to add. */
+/* ── Add control — clean circular, docked top-right of the media ─────────── */
 .larder-card__add {
   position: absolute;
+  z-index: 2;
   inset-block-start: var(--sp-3);
   inset-inline-end: var(--sp-3);
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  padding: var(--sp-2) var(--sp-3);
+  display: inline-grid;
+  place-items: center;
+  /* Comfortable >=44px tap target. */
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 0;
   border-radius: var(--radius-pill);
-  font-family: var(--font-body);
-  font-weight: 600;
-  font-size: var(--fs-meta);
-  line-height: 1;
-  background-color: var(--larder-stall);
+  cursor: pointer;
   color: var(--larder-stall-ink);
-  box-shadow: var(--shadow-stall),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.18);
-  backdrop-filter: saturate(1.2);
-  transition: background-color var(--dur-fast) var(--ease-out),
+  background-color: var(--larder-stall);
+  box-shadow:
+    var(--shadow-stall),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.22);
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    background-color var(--dur-fast) var(--ease-out),
     transform var(--dur-mid) var(--ease-spring),
     box-shadow var(--dur-mid) var(--ease-out);
 }
 
-.larder-card__add:hover {
-  transform: scale(1.04);
-}
-
-.larder-card__add:hover {
-  background-color: color-mix(in srgb, var(--larder-stall) 90%, var(--larder-ink));
+@media (hover: hover) {
+  .larder-card__add:hover {
+    transform: scale(1.06);
+    background-color: var(--larder-stall-press);
+  }
 }
 
 .larder-card__add:active {
-  transform: scale(0.96);
+  transform: scale(0.9);
 }
 
-/* Once in the basket the control flips to the leaf confirmation cue. */
+.larder-card__add:focus-visible {
+  outline: 2px solid var(--larder-paper);
+  outline-offset: 2px;
+}
+
+/* Once basketed: morph to the leaf confirmation. */
 .larder-card__add.is-in-basket {
   background-color: var(--larder-leaf);
   color: var(--larder-leaf-ink);
-  box-shadow: none;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.24);
 }
 
-.larder-card__add.is-in-basket:hover {
-  background-color: color-mix(in srgb, var(--larder-leaf) 88%, var(--larder-ink));
+@media (hover: hover) {
+  .larder-card__add.is-in-basket:hover {
+    background-color: color-mix(in srgb, var(--larder-leaf) 86%, var(--larder-ink));
+  }
 }
 
-/* ── Rail variant: fixed width for horizontal category rails ───────────── */
+/* ── Add → added glyph morph (stall plus ⇄ leaf tick) ────────────────────── */
+/* Both glyphs stack; we cross-fade + rotate-scale between them so the change
+   reads as one confident motion rather than an icon swap. */
+.larder-card__add-glyph {
+  grid-area: 1 / 1;
+  display: inline-grid;
+  place-items: center;
+  line-height: 0;
+  transition:
+    opacity var(--dur-mid) var(--ease-emph),
+    transform var(--dur-mid) var(--ease-spring);
+}
+
+.larder-card__add-glyph--plus {
+  opacity: 1;
+  transform: rotate(0deg) scale(1);
+}
+
+.larder-card__add-glyph--leaf {
+  opacity: 0;
+  transform: rotate(-90deg) scale(0.4);
+}
+
+.larder-card__add.is-in-basket .larder-card__add-glyph--plus {
+  opacity: 0;
+  transform: rotate(90deg) scale(0.4);
+}
+
+.larder-card__add.is-in-basket .larder-card__add-glyph--leaf {
+  opacity: 1;
+  transform: rotate(0deg) scale(1);
+}
+
+/* A one-shot pop on the tick the moment it becomes "added". */
+.larder-card__add.is-in-basket .larder-card__add-glyph--leaf {
+  animation: larder-add-pop var(--dur-mid) var(--ease-spring);
+}
+
+@keyframes larder-add-pop {
+  0% {
+    transform: rotate(0deg) scale(0.4);
+  }
+  55% {
+    transform: rotate(0deg) scale(1.22);
+  }
+  100% {
+    transform: rotate(0deg) scale(1);
+  }
+}
+
+/* ── Rail variant: fixed width, scroll-snapped horizontal rails ──────────── */
 .larder-card--rail {
   flex: 0 0 auto;
   width: 230px;
@@ -156,4 +237,29 @@
 
 .larder-card--rail .larder-card__title {
   font-size: var(--fs-body);
+}
+
+/* Tighten cards a touch on the smallest screens so two fit comfortably. */
+@media (max-width: 380px) {
+  .larder-card__body {
+    padding: var(--sp-3);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .larder-card,
+  .larder-card__add,
+  .larder-card__add-glyph,
+  .larder-card__image .larder-img__img {
+    transition-duration: var(--dur-fast);
+  }
+  .larder-card:hover {
+    transform: none;
+  }
+  .larder-card:hover .larder-card__image .larder-img__img {
+    transform: none;
+  }
+  .larder-card__add.is-in-basket .larder-card__add-glyph--leaf {
+    animation: none;
+  }
 }

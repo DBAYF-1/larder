@@ -61,14 +61,63 @@
 }
 
 .larder-receipt__row {
-  padding-block: var(--sp-1);
+  padding-block: var(--sp-2);
+}
+
+.larder-receipt__row + .larder-receipt__row {
+  border-top: 1px solid var(--larder-hairline);
 }
 
 .larder-receipt__main {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   gap: var(--sp-3);
+  /* Comfortable, accessible tap target (>=44px) for ticking items off. */
+  min-height: 44px;
   cursor: pointer;
+}
+
+/* ── Ingredient photo (or monochrome dot fallback) ─────────────────────────── */
+/* A small, square, rounded thumbnail makes each line scannable like a real
+   shopping list. It loads through RecipeImage so it never relies on native lazy
+   and never strands as a broken image. The dot fallback is a quiet stand-in. */
+.larder-receipt__thumb {
+  flex: none;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  background-color: var(--larder-mist);
+}
+
+/* RecipeImage renders its own fixed-ratio box; pin it to the thumb footprint. */
+.larder-img.larder-receipt__thumb {
+  width: 2.5rem;
+}
+
+.larder-receipt__thumb--dot {
+  display: block;
+  border: 1px solid var(--larder-hairline);
+  background:
+    radial-gradient(
+      120% 120% at var(--larder-dot-pos, 50%) 18%,
+      var(--larder-paper-2),
+      var(--larder-mist) 70%
+    );
+  position: relative;
+}
+
+/* A tiny centred bead so the placeholder reads as "no photo", not "missing". */
+.larder-receipt__thumb--dot::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 0.6rem;
+  height: 0.6rem;
+  border-radius: var(--radius-pill);
+  background-color: var(--larder-slate);
+  opacity: 0.32;
 }
 
 /* Visually hidden native checkbox; the .box renders the tick. */
@@ -111,8 +160,9 @@
   flex: 0 1 auto;
   font-family: var(--font-body);
   font-size: var(--fs-body);
+  font-weight: 500;
   color: var(--larder-ink);
-  line-height: var(--lh-tight);
+  line-height: var(--lh-snug);
 }
 
 .larder-receipt__alt,
@@ -121,12 +171,13 @@
   color: var(--larder-slate);
 }
 
-/* The dotted leader — fills the gap between name and quantity. */
+/* The dotted leader — fills the gap between name and quantity. The row is now
+   centre-aligned (a photo sits taller than the text), so the leader centres too
+   while keeping the till-receipt dotted rule between name and figure. */
 .larder-receipt__leader {
   flex: 1 1 auto;
-  align-self: flex-end;
+  align-self: center;
   min-width: var(--sp-4);
-  margin-bottom: 0.28em;
   height: 0;
   border-bottom: 1px dotted var(--larder-hairline);
 }
@@ -152,6 +203,11 @@
   text-decoration-color: var(--larder-hairline);
 }
 
+.larder-receipt__row.is-checked .larder-receipt__thumb {
+  opacity: 0.45;
+  filter: grayscale(0.6);
+}
+
 /* Optional extras read quieter and arrive unticked. */
 .larder-receipt__row.is-optional .larder-receipt__name {
   color: var(--larder-slate);
@@ -162,7 +218,7 @@
 /* Quiet till-receipt aside: "buy 2 × 400 g tin · 300 g spare". Mono register,
    muted slate, aligned under the name past the checkbox + gutter. */
 .larder-receipt__pack {
-  padding-inline-start: calc(1.25rem + var(--sp-3));
+  padding-inline-start: calc(2.5rem + var(--sp-3) + 1.25rem + var(--sp-3));
   margin-top: var(--sp-1);
   font-family: var(--font-mono);
   font-variant-numeric: tabular-nums;
@@ -174,7 +230,7 @@
 
 /* ── "Needed for" detail ───────────────────────────────────────────────── */
 .larder-receipt__detail {
-  padding-inline-start: calc(1.25rem + var(--sp-3));
+  padding-inline-start: calc(2.5rem + var(--sp-3) + 1.25rem + var(--sp-3));
 }
 
 .larder-receipt__why {
@@ -239,5 +295,15 @@
 
   .larder-receipt__why {
     display: none;
+  }
+
+  /* Drop the photos on paper — a tick-box list prints cleaner and saves ink. */
+  .larder-receipt__thumb {
+    display: none;
+  }
+
+  .larder-receipt__pack,
+  .larder-receipt__detail {
+    padding-inline-start: calc(1.25rem + var(--sp-3));
   }
 }

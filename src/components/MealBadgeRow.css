@@ -1,29 +1,37 @@
+/* MealBadgeRow — the tidy delivery-app meta line.
+   Quiet captions ("25 min · Serves 4 · 480 kcal") with a leaf diet cue.
+   Tokens only — no hex literals. */
+
 .larder-badges {
+  margin: 0;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: var(--sp-2);
-  margin: 0;
+  gap: 0.3rem var(--sp-2);
+  font-size: var(--fs-meta);
+  line-height: var(--lh-snug);
+  color: var(--larder-slate);
 }
 
 .larder-badge {
   display: inline-flex;
   align-items: center;
   gap: 0.3rem;
-  font-size: var(--fs-meta);
-  color: var(--larder-slate);
   white-space: nowrap;
 }
 
-.larder-badge__icon {
-  flex: none;
-  opacity: 0.85;
+/* Middot leader between the quiet facts — sits in the gap, dimmed. */
+.larder-badge__sep {
+  margin-inline-end: 0.3rem;
+  color: color-mix(in srgb, var(--larder-slate) 55%, transparent);
+  font-weight: 700;
 }
 
 /* kcal reads as a quiet figure — mono ties it to the receipt language. */
 .larder-badge--mono {
   font-family: var(--font-mono);
   font-variant-numeric: tabular-nums;
+  letter-spacing: var(--ls-tight);
 }
 
 /* Diet labels get the leaf cue (confirmations / diet — never red). */
@@ -32,8 +40,8 @@
   border-radius: var(--radius-pill);
   background-color: var(--larder-leaf-tint);
   color: var(--larder-leaf);
-  font-weight: 600;
+  font-weight: 700;
   font-size: var(--fs-micro);
-  letter-spacing: 0.02em;
+  letter-spacing: var(--ls-wide);
   text-transform: uppercase;
 }

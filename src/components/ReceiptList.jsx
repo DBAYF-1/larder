@@ -1,6 +1,9 @@
 // <ReceiptList list /> with <ReceiptAisleHeader>, <ReceiptItem>, <ReceiptFooter>
-// (CONTRACTS.md §4). This is the "register shift" — the quiet, structured, mono
-// till-receipt that the appetising browse collapses into (design system §11).
+// (CONTRACTS.md §4). This is the aisle-walk grocery list — modern, legible, and
+// checkable — that the appetising browse collapses into (design system §11). It
+// keeps a quiet receipt character (mono quantities, dotted leaders, a till-style
+// footer) but reads as a real shopping list on mobile: every item carries a
+// small INGREDIENT PHOTO so the line is scannable at a glance.
 //
 //   list = buildShoppingList output (§2):
 //     { sections: [{ aisle, items: [{ ingredientId, name, displayQuantity,
@@ -8,15 +11,23 @@
 //       totals: { itemCount, recipeCount, householdSize } }
 //
 // Sections arrive pre-ordered from the algorithm; we defensively re-sort by the
-// shared SECTION_ORDER so the on-screen walk always matches the shop.
+// shared SECTION_ORDER so the on-screen walk always matches the supermarket
+// aisle order (SHOP_WALK + the three appendix sections).
 //
-// Each row: checkbox + name + DOTTED LEADER + right-aligned MONOSPACE qty.
-// The "needed for: {meals}" detail expands per row. Check state is owned by the
-// parent screen (controlled via `checked` / `onToggle`); when the parent passes
-// no handlers, rows fall back to internal local check state so the component is
-// usable standalone.
-import { useState } from 'react'
+// Each row: small ingredient photo + checkbox + name + DOTTED LEADER +
+// right-aligned MONOSPACE qty. The "needed for: {meals}" detail expands per row.
+// Check state is owned by the parent screen (controlled via `checked` /
+// `onToggle`); when the parent passes no handlers, rows fall back to internal
+// local check state so the component is usable standalone.
+//
+// Ingredient photos: the parent passes `imageFor(ingredientId) => url | null`
+// (built from the ingredient docs' `imageUrl`, a free TheMealDB photo). When the
+// lookup returns null — or no `imageFor` is supplied at all — we render a tidy
+// monochrome dot keyed to the item name, so a row is NEVER blank or broken. Every
+// photo renders through <RecipeImage> so it loads reliably (never native lazy).
+import { useEffect, useState } from 'react'
 import { aisleRank } from '../lib/shopWalk.js'
+import RecipeImage from './RecipeImage.jsx'
 import './ReceiptList.css'
 
 export function ReceiptAisleHeader({ aisle, count }) {
@@ -33,7 +44,75 @@ export function ReceiptAisleHeader({ aisle, count }) {
   )
 }
 
-export function ReceiptItem({ item, checked, onToggle }) {
+// A small, deterministic monochrome dot for items without a real photo. The hue
+// position comes from the name so the same ingredient always gets the same dot
+// (stable, varied, never random) — the photo-less analogue of RecipeImage's
+// fallback block, kept quiet so it reads as "no photo" rather than an error.
+function dotPos(text) {
+  const str = String(text || '')
+  let h = 0
+  for (let i = 0; i < str.length; i += 1) h = (h * 31 + str.charCodeAt(i)) | 0
+  return Math.abs(h) % 100
+}
+
+// The small ingredient thumbnail. A photo URL (from the ingredient doc, or a
+// derived TheMealDB photo) is shown ONLY once it is confirmed to load; until
+// then — and on any failure or absence — we show the quiet monochrome dot.
+//
+// Why probe instead of handing the URL straight to RecipeImage? RecipeImage's
+// own error fallback is a bold market-stall gradient block — right for a recipe
+// card, wrong for a 40 px grocery thumbnail, where a row that misses its photo
+// should recede to a tidy dot, not shout. The probe keeps every *real* photo
+// rendering through RecipeImage (the shared image contract) while guaranteeing
+// the gentle fallback. A detached Image() never paints a broken tile; data:
+// URIs and cached images resolve synchronously.
+export function ReceiptThumb({ src, name }) {
+  const [okSrc, setOkSrc] = useState(null)
+
+  useEffect(() => {
+    setOkSrc(null)
+    if (!src) return undefined
+    let live = true
+    const probe = new Image()
+    probe.onload = () => {
+      if (live) setOkSrc(src)
+    }
+    probe.onerror = () => {
+      // Leave okSrc null → the dot stands in. Never the loud gradient block.
+    }
+    probe.src = src
+    // Some browsers fire onload before the handler attaches for cached/data URIs.
+    if (probe.complete && probe.naturalWidth > 0) setOkSrc(src)
+    return () => {
+      live = false
+      probe.onload = null
+      probe.onerror = null
+    }
+  }, [src])
+
+  if (okSrc) {
+    return (
+      <RecipeImage
+        src={okSrc}
+        alt=""
+        priority
+        ratio="1/1"
+        rounded
+        className="larder-receipt__thumb"
+      />
+    )
+  }
+
+  return (
+    <span
+      className="larder-receipt__thumb larder-receipt__thumb--dot"
+      aria-hidden="true"
+      style={{ '--larder-dot-pos': `${dotPos(name)}%` }}
+    />
+  )
+}
+
+export function ReceiptItem({ item, checked, onToggle, imageSrc = null }) {
   const [open, setOpen] = useState(false)
   // Local fallback when the parent does not control check state.
   const [localChecked, setLocalChecked] = useState(false)
@@ -67,6 +146,7 @@ export function ReceiptItem({ item, checked, onToggle }) {
           checked={isChecked}
           onChange={handleToggle}
         />
+        <ReceiptThumb src={imageSrc} name={item.name} />
         <span className="larder-receipt__box" aria-hidden="true">
           <svg
             viewBox="0 0 24 24"
@@ -153,7 +233,7 @@ function slugify(text) {
     .replace(/^-|-$/g, '')
 }
 
-export default function ReceiptList({ list, checkedIds, onToggleItem }) {
+export default function ReceiptList({ list, checkedIds, onToggleItem, imageFor }) {
   if (!list || !Array.isArray(list.sections)) return null
 
   const sections = [...list.sections]
@@ -162,6 +242,15 @@ export default function ReceiptList({ list, checkedIds, onToggleItem }) {
 
   // Optional controlled check state: a Set of keys the parent ticks off.
   const controlled = checkedIds instanceof Set
+
+  // Resolve an item's ingredient photo URL. The parent supplies a lookup keyed
+  // by ingredientId (from the ingredient docs' imageUrl); a missing lookup, a
+  // null result, or an item with no ingredientId (needs-review lines) all fall
+  // through to the monochrome dot in <ReceiptThumb>.
+  const resolveImage = (item) =>
+    typeof imageFor === 'function' && item.ingredientId
+      ? imageFor(item.ingredientId) || null
+      : null
 
   function keyFor(item) {
     return item.ingredientId || `${item.name}::${item.raw || ''}`
@@ -183,6 +272,7 @@ export default function ReceiptList({ list, checkedIds, onToggleItem }) {
                   <ReceiptItem
                     key={key}
                     item={item}
+                    imageSrc={resolveImage(item)}
                     checked={
                       controlled ? checkedIds.has(key) : undefined
                     }
