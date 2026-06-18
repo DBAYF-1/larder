@@ -48,15 +48,18 @@ jobs:
           EDAMAM_KEY: ${{ secrets.EDAMAM_KEY }}
           EDAMAM_TIER: ${{ secrets.EDAMAM_TIER }}
           LIMIT: ${{ github.event.inputs.limit }}
-        # --source all = full TheMealDB corpus + ALL curated sets (incl. every
-        # per-diet set), with correct facets; the Edamam sampler skips cleanly
-        # without keys. Idempotent via contentHash diffing. SWITCH TO --source
-        # mega once EDAMAM_ID/EDAMAM_KEY secrets exist — mega adds the checkpointed
-        # diet×cuisine×mealType Edamam backfill (the 10K driver, spread across runs
-        # under the free 20K writes/day cap). --limit caps the run for a smoke test.
+        # --source mega = the 10K driver: seed-once TheMealDB corpus + ALL curated
+        # sets (incl. every per-diet set), then the checkpointed diet×cuisine×mealType
+        # Edamam backfill that fills toward 10K across runs, under the free Spark
+        # 20K-writes/day cap. All layers are idempotent via contentHash diffing, so
+        # re-runs are near-zero-write. The Edamam matrix skips CLEANLY when
+        # EDAMAM_ID/EDAMAM_KEY are unset — until those secrets exist, mega behaves
+        # exactly like a full single-pass (TheMealDB + curated only, ceiling ~3-4k);
+        # the moment the keys land, the same cron starts harvesting to 10K with no
+        # code change. --limit caps the per-run write budget for a smoke test.
         run: |
           if [ -n "$LIMIT" ]; then
-            node ingest.js --source all --limit "$LIMIT"
+            node ingest.js --source mega --limit "$LIMIT"
           else
-            node ingest.js --source all
+            node ingest.js --source mega
           fi
