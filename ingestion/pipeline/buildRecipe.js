@@ -2,10 +2,25 @@
 // source recipe, running the parse -> resolve -> normalise pipeline per line and
 // deriving allergens, parseCompleteness, healthLabels and nutritionPerServing.
 
+import { readFileSync } from 'node:fs'
+import { fileURLToPath } from 'node:url'
+import { dirname, join } from 'node:path'
 import { parseLine } from './parse.js'
 import { resolveCore, slugify } from './resolve.js'
 import { normaliseLine } from './normalise.js'
 import { isKnownUnit } from './units.js'
+
+// Generated dish photos (Pollinations, hosted on Firebase Hosting) keyed by
+// recipe id. These OVERRIDE the source imageUrl so a re-ingest never reverts a
+// dish to its old loosely-matched photo. Defensive: {} if the file is absent.
+let GENERATED_IMAGES = {}
+try {
+  GENERATED_IMAGES = JSON.parse(
+    readFileSync(join(dirname(fileURLToPath(import.meta.url)), '..', 'data', 'generated-images.json'), 'utf8'),
+  )
+} catch {
+  GENERATED_IMAGES = {}
+}
 
 // Unit-like leading words that occasionally bleed into TheMealDB's name field
 // ("tsp parsley", "cup onion"). Stripped before resolution.
@@ -237,7 +252,7 @@ export function buildRecipeDoc(src, index) {
     source: src.source,
     sourceId: String(src.sourceId),
     sourceUrl: src.sourceUrl || '',
-    imageUrl: src.imageUrl || '',
+    imageUrl: GENERATED_IMAGES[id] || src.imageUrl || '',
     imageAttribution: src.imageAttribution ?? null,
     instructions: src.instructions ?? null,
     instructionsExternal: Boolean(src.instructionsExternal),
