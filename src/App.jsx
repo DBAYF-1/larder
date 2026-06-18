@@ -17,6 +17,7 @@ import {
 import BasketButton from './components/BasketButton.jsx'
 import SourceCredit from './components/SourceCredit.jsx'
 import ErrorBoundary from './components/ErrorBoundary.jsx'
+import EmptyState from './components/EmptyState.jsx'
 import { useBasket } from './state/basket.js'
 
 import Browse from './screens/Browse.jsx'
@@ -56,6 +57,18 @@ function Footer() {
   )
 }
 
+function NotFound() {
+  const navigate = useNavigate()
+  return (
+    <EmptyState
+      title="That page has moved on"
+      body="We couldn't find that page. Head back and pick a few meals — we'll write the list."
+      actionLabel="Browse meals"
+      onAction={() => navigate('/')}
+    />
+  )
+}
+
 export default function App() {
   const location = useLocation()
   return (
@@ -71,6 +84,7 @@ export default function App() {
               <Route path="basket" element={<Basket />} />
               <Route path="list" element={<ShoppingList />} />
               <Route path="sources" element={<Sources />} />
+              <Route path="*" element={<NotFound />} />
             </Route>
           </Routes>
         </ErrorBoundary>
