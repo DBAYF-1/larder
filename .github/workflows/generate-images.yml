@@ -1,0 +1,77 @@
+name: generate-images
+
+# Generate accurate dish photos (Pollinations zimage) on GitHub's runners, which
+# run UNINTERRUPTED for hours on a fresh IP — unlike the local dev environment,
+# which stops long processes at every turn and carries an accumulated rate-limit
+# cooldown. The job generates the photos, commits them to public/dishes/, and
+# re-ingests so each recipe links its photo. A hosting deploy (run separately,
+# needs the dbayft Firebase login) then serves them.
+
+on:
+  workflow_dispatch:
+    inputs:
+      limit:
+        description: 'Top-N most-popular dishes to cover'
+        required: false
+        default: '500'
+      concurrency:
+        description: 'Parallel generations'
+        required: false
+        default: '3'
+      interval:
+        description: 'ms between request starts (>=7000 to respect the tier)'
+        required: false
+        default: '8000'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: generate-images
+  cancel-in-progress: false
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install ingestion deps
+        working-directory: ingestion
+        run: npm install
+
+      - name: Write service-account credentials
+        env:
+          SA: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: printf '%s' "$SA" > "$RUNNER_TEMP/sa.json"
+
+      - name: Generate dish photos
+        working-directory: ingestion
+        env:
+          POLLINATIONS_KEY: ${{ secrets.POLLINATIONS_KEY }}
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.temp }}/sa.json
+        run: |
+          node scripts/generateDishImages.mjs \
+            --limit "${{ github.event.inputs.limit || '500' }}" \
+            --concurrency "${{ github.event.inputs.concurrency || '3' }}" \
+            --interval "${{ github.event.inputs.interval || '8000' }}"
+
+      - name: Commit generated photos
+        run: |
+          git config user.name "larder-images[bot]"
+          git config user.email "larder-images@users.noreply.github.com"
+          git add public/dishes ingestion/data/generated-images.json
+          git commit -m "Generated dish photos (CI batch)" || { echo "nothing new"; exit 0; }
+          git push
+
+      - name: Link photos to recipes (Firestore)
+        working-directory: ingestion
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.temp }}/sa.json
+          THEMEALDB_KEY: ${{ secrets.THEMEALDB_KEY }}
+        run: node ingest.js --source all
