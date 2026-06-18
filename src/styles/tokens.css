@@ -18,8 +18,15 @@
   --larder-leaf-ink: #ffffff;        /* text on leaf green */
   --larder-stall-tint: #fdecec;      /* faint red wash */
   --larder-leaf-tint: #e7f0ea;       /* faint green wash */
-  --larder-hairline: #d9d5c8;        /* divider line on paper */
+  --larder-hairline: #e4e0d5;        /* refined hairline — softer than the surface */
   --larder-receipt: #fcfbf7;         /* receipt paper, a touch lighter than mist */
+
+  /* Elevation surfaces (subtle layering — content lifts off the paper base) */
+  --larder-elevated: #ffffff;        /* card / panel surface, lifts off paper */
+  --larder-paper-2: #f5f3ec;         /* recessed alt surface */
+  --larder-ink-soft: #4b504a;        /* secondary text, softer than ink */
+  --larder-stall-press: #d8443f;     /* pressed/active red */
+  --larder-glass: rgba(251, 250, 246, 0.72); /* frosted bar fill */
 
   /* ── Typography (Section 11.3) ─────────────────────────────────────────── */
   --font-display: 'Archivo', system-ui, -apple-system, sans-serif;      /* chunky grotesque */
@@ -35,8 +42,14 @@
   --fs-meta: 0.8125rem;   /* the small monospace caption tier: serves / time / kcal */
   --fs-micro: 0.6875rem;
 
-  --lh-tight: 1.1;
-  --lh-body: 1.5;
+  --lh-tight: 1.08;
+  --lh-snug: 1.28;
+  --lh-body: 1.55;
+
+  /* Letter-spacing — tight, confident display type (the Apple cue) */
+  --ls-display: -0.022em;
+  --ls-tight: -0.012em;
+  --ls-wide: 0.04em;
 
   /* ── Space & shape ─────────────────────────────────────────────────────── */
   --sp-1: 0.25rem;
@@ -48,23 +61,37 @@
   --sp-7: 3rem;
   --sp-8: 4rem;
 
-  --radius-sm: 8px;
-  --radius-md: 14px;
-  --radius-lg: 22px;
+  --radius-xs: 7px;
+  --radius-sm: 10px;
+  --radius-md: 16px;
+  --radius-lg: 24px;
   --radius-pill: 999px;
 
-  --shadow-card: 0 1px 2px rgba(31, 36, 33, 0.06), 0 6px 18px rgba(31, 36, 33, 0.08);
-  --shadow-lift: 0 8px 28px rgba(31, 36, 33, 0.16);
-  --shadow-stall: 0 6px 18px rgba(232, 83, 78, 0.28);
+  /* Soft, layered elevation (low-opacity, multi-stop — the premium-depth cue) */
+  --shadow-soft: 0 1px 2px rgba(31, 36, 33, 0.05);
+  --shadow-card:
+    0 0.5px 1px rgba(31, 36, 33, 0.04),
+    0 2px 5px rgba(31, 36, 33, 0.05),
+    0 8px 22px rgba(31, 36, 33, 0.055);
+  --shadow-lift:
+    0 1px 2px rgba(31, 36, 33, 0.06),
+    0 6px 16px rgba(31, 36, 33, 0.10),
+    0 22px 48px rgba(31, 36, 33, 0.12);
+  --shadow-stall:
+    0 1px 3px rgba(216, 68, 63, 0.22),
+    0 8px 22px rgba(216, 68, 63, 0.26);
 
   /* Layout */
   --maxw: 1120px;
   --header-h: 64px;
 
-  /* Motion (Section 11.5 — restrained) */
+  /* Motion — restrained but premium (spring-like emphasis curves) */
   --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ease-spring: cubic-bezier(0.32, 0.72, 0, 1);
+  --ease-emph: cubic-bezier(0.22, 1, 0.36, 1);
   --dur-fast: 140ms;
   --dur-mid: 240ms;
+  --dur-slow: 380ms;
   --dur-collapse: 520ms;
 }
 

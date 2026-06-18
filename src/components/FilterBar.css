@@ -66,21 +66,26 @@
   font-size: var(--fs-meta);
   line-height: 1.2;
   color: var(--larder-ink);
-  background-color: var(--larder-paper);
-  border: 1px solid var(--larder-hairline);
+  background-color: var(--larder-elevated);
+  border: 1px solid color-mix(in srgb, var(--larder-hairline) 80%, transparent);
+  box-shadow: var(--shadow-soft);
   transition: background-color var(--dur-fast) var(--ease-out),
     border-color var(--dur-fast) var(--ease-out),
-    color var(--dur-fast) var(--ease-out);
+    color var(--dur-fast) var(--ease-out),
+    box-shadow var(--dur-mid) var(--ease-out),
+    transform var(--dur-mid) var(--ease-spring);
 }
 
 .larder-chip:hover {
-  border-color: var(--larder-ink);
+  border-color: var(--larder-slate);
+  transform: translateY(-1px);
 }
 
 .larder-chip.is-active {
   background-color: var(--larder-ink);
   border-color: var(--larder-ink);
   color: var(--larder-paper);
+  box-shadow: var(--shadow-card);
 }
 
 /* ── Sort select ───────────────────────────────────────────────────────── */

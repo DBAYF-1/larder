@@ -188,17 +188,26 @@
   font-size: var(--fs-card);
   font-weight: 700;
   color: var(--larder-stall-ink);
-  background: var(--larder-stall);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--larder-stall) 88%, white) 0%,
+    var(--larder-stall) 52%,
+    var(--larder-stall-press) 100%
+  );
   border: none;
   border-radius: var(--radius-pill);
-  padding: var(--sp-4) var(--sp-6);
+  padding: var(--sp-4) var(--sp-7);
   cursor: pointer;
-  box-shadow: var(--shadow-stall);
-  transition: transform var(--dur-fast) var(--ease-out);
+  box-shadow: var(--shadow-stall), inset 0 1px 0 rgba(255, 255, 255, 0.28);
+  transition:
+    transform var(--dur-mid) var(--ease-spring),
+    box-shadow var(--dur-mid) var(--ease-out),
+    filter var(--dur-fast) var(--ease-out);
 }
 
 .basket-make:hover {
   transform: translateY(-1px);
+  filter: saturate(1.06) brightness(1.03);
 }
 
 .basket-make:active {
