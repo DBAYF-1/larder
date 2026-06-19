@@ -29,7 +29,7 @@ export default [
       { rawName: 'Oat milk', rawMeasure: '100ml' },
       { rawName: 'Strawberries', rawMeasure: '100g' },
       { rawName: 'Kiwi fruit', rawMeasure: '1' },
-      { rawName: 'Granola', rawMeasure: '60g' },
+      { rawName: 'Vegan granola', rawMeasure: '60g' },
       { rawName: 'Chia seeds', rawMeasure: '1 tbsp' },
       { rawName: 'Golden syrup', rawMeasure: '1 tbsp' },
     ],

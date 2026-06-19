@@ -516,7 +516,7 @@ export default [
     totalTimeMinutes: 35,
     course: 'Side',
     cuisine: 'Japanese',
-    dietLabels: ['Mediterranean', 'Vegetarian', 'Vegan'],
+    dietLabels: ['Vegetarian', 'Vegan'],
     instructions:
       '1. Heat the oven to 200°C (fan 180°C). Halve the aubergines lengthways and score the flesh in a criss-cross pattern.\n' +
       '2. Mix the miso, soy sauce, sesame oil and a little honey to make a glaze. Brush generously over the cut sides.\n' +

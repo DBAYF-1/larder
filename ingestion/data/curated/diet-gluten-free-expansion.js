@@ -1715,16 +1715,16 @@ export default [
     totalTimeMinutes: 30,
     course: 'Dinner',
     cuisine: 'Thai',
-    dietLabels: ['Vegan', 'Vegetarian'],
+    dietLabels: ['Vegetarian'],
     instructions:
       '1. Press the tofu, cut into cubes and fry in hot oil until golden on all sides. Drain on kitchen paper.\n' +
       '2. Fry the Thai red curry paste in a splash of oil for a minute, then pour in the coconut milk.\n' +
       '3. Add the broccoli, courgette and red pepper and simmer for 8 minutes until just tender.\n' +
-      '4. Season with fish sauce alternative (tamari) and a squeeze of lime.\n' +
+      '4. Season with the tamari and a squeeze of lime.\n' +
       '5. Stir in the tofu, scatter with coriander and serve over jasmine rice.',
     rawLines: [
       { rawName: 'Tofu', rawMeasure: '280g firm' },
-      { rawName: 'Thai red curry paste', rawMeasure: '3 tbsp' },
+      { rawName: 'Thai red curry paste', rawMeasure: '3 tbsp (check label — most contain shrimp paste; use a vegetarian brand)' },
       { rawName: 'Coconut milk', rawMeasure: '1 tin (400ml)' },
       { rawName: 'Broccoli', rawMeasure: '1 small head' },
       { rawName: 'Courgette', rawMeasure: '1' },

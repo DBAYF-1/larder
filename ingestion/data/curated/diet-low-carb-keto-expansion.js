@@ -91,7 +91,7 @@ export default [
       '3. Make two wells in the vegetables and crack an egg into each.\n' +
       '4. Return to the oven for 5–7 minutes until the whites are set. Scatter with chilli flakes and serve.',
     rawLines: [
-      { rawName: 'Paneer', rawMeasure: '225g halloumi' },
+      { rawName: 'Halloumi', rawMeasure: '225g' },
       { rawName: 'Egg', rawMeasure: '4' },
       { rawName: 'Cherry tomato', rawMeasure: '150g' },
       { rawName: 'Mushroom', rawMeasure: '150g' },
