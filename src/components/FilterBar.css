@@ -273,6 +273,23 @@
   padding: var(--sp-4);
 }
 
+/* The shared controls body — a column of facet groups. Used unpadded inside the
+   standalone panel (which supplies its own padding) and inside the embedded
+   layout (Browse's sheet supplies the surrounding spacing). */
+.larder-filterbar__controls {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-5);
+}
+
+/* ── Embedded layout (roadmap #16) ────────────────────────────────────────────
+   When Browse hosts the controls inside its own sheet, FilterBar renders ONLY
+   the controls body — no slim bar, no trigger, no absolute panel. It lays out as
+   flat in-flow content; Browse owns the heading + Clear/Done actions. */
+.larder-filterbar--embedded {
+  position: static;
+}
+
 .larder-facet {
   border: 0;
   padding: 0;

@@ -21,9 +21,39 @@ function collectIngredientIds(recipes) {
   return [...ids]
 }
 
+// Apply per-recipe portion overrides (roadmap #28) WITHOUT changing
+// buildShoppingList's signature. The engine scales each recipe by
+// `householdSize / servingsBase`; to make a recipe scale to its own effective
+// people count we pass the basket with `householdSize: 1` and rewrite each
+// recipe's `servingsBase` to `servingsBase / effective` — the factor then
+// becomes `effective / servingsBase`, exactly the per-recipe factor we want,
+// while cross-recipe dedupe is preserved (one combined list, one call).
+export function scaleRecipesByPortion(recipes, effectiveHousehold) {
+  const out = {}
+  for (const [id, recipe] of Object.entries(recipes)) {
+    if (!recipe) continue
+    const base =
+      typeof recipe.servingsBase === 'number' && recipe.servingsBase > 0
+        ? recipe.servingsBase
+        : 1
+    const effective = Math.max(1, Number(effectiveHousehold(id)) || 1)
+    out[id] = { ...recipe, servingsBase: base / effective }
+  }
+  return out
+}
+
 export default function Basket() {
   const navigate = useNavigate()
-  const { recipeIds, householdSize, remove, setHouseholdSize } = useBasket()
+  const {
+    recipeIds,
+    householdSize,
+    remove,
+    setHouseholdSize,
+    portions,
+    setPortion,
+    clearPortion,
+    effectiveHousehold,
+  } = useBasket()
 
   // recipeId -> doc | null (null = fetched-but-missing)
   const [recipes, setRecipes] = useState({})
@@ -113,14 +143,16 @@ export default function Basket() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ingredientIdsKey])
 
-  // Compute the live unique-item count from the pure builder.
+  // Compute the live unique-item count from the pure builder, honouring any
+  // per-meal portion overrides (roadmap #28) via the scale-by-portion adapter.
   const itemCount = useMemo(() => {
     const ids = Object.keys(resolvedRecipes)
     if (ids.length === 0) return 0
     try {
+      const scaled = scaleRecipesByPortion(resolvedRecipes, effectiveHousehold)
       const list = buildShoppingList(
-        { recipeIds: ids, householdSize },
-        resolvedRecipes,
+        { recipeIds: ids, householdSize: 1 },
+        scaled,
         ingredients,
       )
       if (typeof list?.totals?.itemCount === 'number') {
@@ -134,7 +166,10 @@ export default function Basket() {
     } catch {
       return 0
     }
-  }, [resolvedRecipes, ingredients, householdSize])
+    // effectiveHousehold closes over portions + householdSize, which are the
+    // only inputs beyond the recipes/ingredients we depend on.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [resolvedRecipes, ingredients, householdSize, portions])
 
   const handleMakeList = useCallback(() => {
     // Flag the arrival so ShoppingList can play the collapse animation.
@@ -159,7 +194,8 @@ export default function Basket() {
         <p className="basket-sub">
           {recipeIds.length}{' '}
           {recipeIds.length === 1 ? 'meal' : 'meals'} chosen. Set your household
-          size, then turn it into one shopping list.
+          size, fine-tune any meal&rsquo;s portions, then turn it into one
+          shopping list.
         </p>
       </header>
 
@@ -167,56 +203,131 @@ export default function Basket() {
         {recipeIds.map((id) => {
           const doc = recipes[id]
           const isLoading = loadingMeals && doc === undefined
+          const portion = effectiveHousehold(id)
+          const overridden = typeof portions[id] === 'number'
           return (
             <li className="basket-row" key={id}>
-              <Link
-                to={`/meal/${id}`}
-                className="basket-row__thumb"
-                aria-label={doc?.title ? `Open ${doc.title}` : 'Open meal'}
-                tabIndex={doc ? 0 : -1}
-              >
-                <RecipeImage
-                  src={doc?.imageUrl}
-                  alt=""
-                  priority
-                  ratio="1/1"
-                  rounded
-                  w={96}
-                  className="basket-row__img"
-                />
-              </Link>
+              <div className="basket-row__lead">
+                <Link
+                  to={`/meal/${id}`}
+                  className="basket-row__thumb"
+                  aria-label={doc?.title ? `Open ${doc.title}` : 'Open meal'}
+                  tabIndex={doc ? 0 : -1}
+                >
+                  <RecipeImage
+                    src={doc?.imageUrl}
+                    alt=""
+                    priority
+                    ratio="1/1"
+                    rounded
+                    w={96}
+                    className="basket-row__img"
+                  />
+                </Link>
 
-              <div className="basket-row__main">
-                {isLoading ? (
-                  <span className="basket-row__loading">Loading…</span>
-                ) : doc ? (
-                  <Link to={`/meal/${id}`} className="basket-row__name">
-                    {doc.title || 'Untitled meal'}
-                  </Link>
-                ) : (
-                  <span className="basket-row__name basket-row__name--missing">
-                    This meal is no longer available
-                  </span>
-                )}
-                {doc?.cuisine || doc?.course ? (
-                  <span className="basket-row__meta">
-                    {[doc.cuisine, doc.course].filter(Boolean).join(' · ')}
-                  </span>
-                ) : null}
+                <div className="basket-row__main">
+                  {isLoading ? (
+                    <span className="basket-row__loading">Loading…</span>
+                  ) : doc ? (
+                    <Link to={`/meal/${id}`} className="basket-row__name">
+                      {doc.title || 'Untitled meal'}
+                    </Link>
+                  ) : (
+                    <span className="basket-row__name basket-row__name--missing">
+                      This meal is no longer available
+                    </span>
+                  )}
+                  {doc?.cuisine || doc?.course ? (
+                    <span className="basket-row__meta">
+                      {[doc.cuisine, doc.course].filter(Boolean).join(' · ')}
+                    </span>
+                  ) : null}
+                </div>
+
+                <button
+                  type="button"
+                  className="basket-row__remove"
+                  onClick={() => remove(id)}
+                  aria-label={
+                    doc?.title
+                      ? `Remove ${doc.title} from your basket`
+                      : 'Remove this meal from your basket'
+                  }
+                >
+                  Remove
+                </button>
               </div>
 
-              <button
-                type="button"
-                className="basket-row__remove"
-                onClick={() => remove(id)}
-                aria-label={
-                  doc?.title
-                    ? `Remove ${doc.title} from your basket`
-                    : 'Remove this meal from your basket'
-                }
-              >
-                Remove
-              </button>
+              {/* Per-meal portions (roadmap #28). Defaults to the household
+                  size; bumping it scales just this meal. A small reset appears
+                  once the meal carries its own override. */}
+              <div className="basket-row__portion">
+                <span className="basket-row__portion-label" id={`portion-${id}`}>
+                  Portions
+                </span>
+                <div
+                  className="basket-portion"
+                  role="group"
+                  aria-labelledby={`portion-${id}`}
+                >
+                  <button
+                    type="button"
+                    className="basket-portion__btn"
+                    onClick={() => setPortion(id, portion - 1)}
+                    disabled={portion <= 1}
+                    aria-label={`One fewer portion${doc?.title ? ` of ${doc.title}` : ''}`}
+                  >
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" aria-hidden="true">
+                      <path d="M5 12h14" />
+                    </svg>
+                  </button>
+                  <span
+                    className="basket-portion__value"
+                    role="spinbutton"
+                    tabIndex={0}
+                    aria-valuemin={1}
+                    aria-valuemax={12}
+                    aria-valuenow={portion}
+                    aria-valuetext={`${portion} ${portion === 1 ? 'serving' : 'servings'}`}
+                    aria-label={`Portions${doc?.title ? ` for ${doc.title}` : ''}`}
+                    onKeyDown={(event) => {
+                      if (event.key === 'ArrowUp' || event.key === 'ArrowRight') {
+                        event.preventDefault()
+                        setPortion(id, portion + 1)
+                      } else if (event.key === 'ArrowDown' || event.key === 'ArrowLeft') {
+                        event.preventDefault()
+                        setPortion(id, portion - 1)
+                      }
+                    }}
+                  >
+                    {portion}
+                  </span>
+                  <button
+                    type="button"
+                    className="basket-portion__btn"
+                    onClick={() => setPortion(id, portion + 1)}
+                    disabled={portion >= 12}
+                    aria-label={`One more portion${doc?.title ? ` of ${doc.title}` : ''}`}
+                  >
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" aria-hidden="true">
+                      <path d="M12 5v14M5 12h14" />
+                    </svg>
+                  </button>
+                </div>
+                {overridden ? (
+                  <button
+                    type="button"
+                    className="basket-row__portion-reset"
+                    onClick={() => clearPortion(id)}
+                  >
+                    Match household
+                  </button>
+                ) : (
+                  <span className="basket-row__portion-hint u-meta">
+                    matches household
+                  </span>
+                )}
+              </div>
             </li>
           )
         })}
@@ -233,7 +344,8 @@ export default function Basket() {
             max={12}
           />
           <span className="basket-household__hint">
-            We&rsquo;ll scale every quantity to suit.
+            We&rsquo;ll scale every quantity to suit — adjust a single meal above
+            if it needs different portions.
           </span>
         </div>
 

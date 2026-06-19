@@ -146,6 +146,146 @@
   white-space: nowrap;
 }
 
+/* ── Leftovers from this shop (roadmap #23) ───────────────────────────── */
+.leftovers {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+  background: var(--larder-leaf-tint);
+  border: 1px solid var(--larder-hairline);
+  border-radius: var(--radius-md);
+  padding: var(--sp-5);
+}
+
+.leftovers__intro {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+}
+
+.leftovers__title {
+  font-family: var(--font-display);
+  font-size: var(--fs-section);
+  font-weight: 700;
+  color: var(--larder-ink);
+  margin: 0;
+}
+
+.leftovers__blurb {
+  font-family: var(--font-body);
+  font-size: var(--fs-meta);
+  color: var(--larder-ink-soft);
+  margin: 0;
+  max-width: 40rem;
+}
+
+.leftovers__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+.leftovers__row {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  padding: var(--sp-3);
+  background: var(--larder-receipt);
+  border: 1px solid var(--larder-hairline);
+  border-radius: var(--radius-sm);
+}
+
+.leftovers__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--sp-3);
+}
+
+.leftovers__name {
+  font-family: var(--font-body);
+  font-size: var(--fs-body);
+  font-weight: 600;
+  color: var(--larder-ink);
+}
+
+.leftovers__spare {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: var(--fs-meta);
+  color: var(--larder-leaf);
+  white-space: nowrap;
+}
+
+.leftovers__find {
+  align-self: flex-start;
+  font-family: var(--font-body);
+  font-size: var(--fs-meta);
+  font-weight: 600;
+  color: var(--larder-leaf);
+  background: transparent;
+  border: 1px solid var(--larder-leaf);
+  border-radius: var(--radius-pill);
+  padding: var(--sp-1) var(--sp-3);
+  cursor: pointer;
+  transition: background var(--dur-fast) var(--ease-out),
+    color var(--dur-fast) var(--ease-out);
+}
+
+.leftovers__find:hover {
+  background: var(--larder-leaf);
+  color: var(--larder-leaf-ink);
+}
+
+.leftovers__status {
+  font-family: var(--font-body);
+  font-size: var(--fs-meta);
+  color: var(--larder-slate);
+  font-style: italic;
+}
+
+.leftovers__matches {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+}
+
+.leftovers__match {
+  display: inline-block;
+  font-family: var(--font-body);
+  font-size: var(--fs-meta);
+  font-weight: 600;
+  color: var(--larder-ink);
+  text-decoration: none;
+  background: var(--larder-mist);
+  border-radius: var(--radius-pill);
+  padding: var(--sp-1) var(--sp-3);
+  transition: background var(--dur-fast) var(--ease-out);
+}
+
+.leftovers__match:hover {
+  background: var(--larder-hairline);
+  text-decoration: underline;
+}
+
+.leftovers__find:focus-visible,
+.leftovers__match:focus-visible {
+  outline: 3px solid var(--larder-ink);
+  outline-offset: 2px;
+}
+
+@media print {
+  .leftovers {
+    display: none !important;
+  }
+}
+
 /* ── Loading skeleton ─────────────────────────────────────────────────── */
 .list-skel {
   background: var(--larder-receipt);

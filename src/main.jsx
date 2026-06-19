@@ -9,6 +9,12 @@ import { createRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 import App from './App.jsx'
 import { BasketProvider } from './state/basket.js'
+import { installGlobalErrorTracking } from './analytics.js'
+
+// Privacy-friendly error tracking (#17): attach window.onerror /
+// onunhandledrejection beacons at boot. No-ops unless an endpoint is configured
+// (window.__LARDER_ANALYTICS__), so there is no cost and no cookies.
+installGlobalErrorTracking()
 
 const root = createRoot(document.getElementById('root'))
 

@@ -237,6 +237,15 @@ function slugify(text) {
     .replace(/^-|-$/g, '')
 }
 
+// The stable key for a receipt item's tick-off state (roadmap #12). Exported so
+// the parent screen can build/persist its `checkedIds` Set with the SAME keys the
+// list renders with: ingredientId where we have one, else name+raw (needs-review
+// lines have no ingredientId and must never collapse into one key).
+export function receiptItemKey(item) {
+  if (!item) return ''
+  return item.ingredientId || `${item.name}::${item.raw || ''}`
+}
+
 export default function ReceiptList({ list, checkedIds, onToggleItem, imageFor }) {
   if (!list || !Array.isArray(list.sections)) return null
 
@@ -256,10 +265,6 @@ export default function ReceiptList({ list, checkedIds, onToggleItem, imageFor }
       ? imageFor(item.ingredientId) || null
       : null
 
-  function keyFor(item) {
-    return item.ingredientId || `${item.name}::${item.raw || ''}`
-  }
-
   return (
     <section className="larder-receipt" aria-label="Your shopping list">
       <ul className="larder-receipt__list">
@@ -271,7 +276,7 @@ export default function ReceiptList({ list, checkedIds, onToggleItem, imageFor }
             />
             <ul className="larder-receipt__items">
               {section.items.map((item) => {
-                const key = keyFor(item)
+                const key = receiptItemKey(item)
                 return (
                   <ReceiptItem
                     key={key}

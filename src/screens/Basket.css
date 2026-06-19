@@ -44,14 +44,21 @@
 
 .basket-row {
   display: flex;
-  align-items: center;
-  gap: var(--sp-4);
+  flex-direction: column;
+  gap: var(--sp-3);
   padding: var(--sp-3) var(--sp-4);
   border-bottom: 1px solid var(--larder-hairline);
 }
 
 .basket-row:last-child {
   border-bottom: none;
+}
+
+/* The meal identity line: thumb + name + remove. */
+.basket-row__lead {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
 }
 
 /* The thumbnail is a link to the meal. RecipeImage renders a fixed-ratio
@@ -133,6 +140,93 @@
 
 .basket-row__remove:hover {
   background: var(--larder-stall-tint);
+}
+
+/* ── Per-meal portions (roadmap #28) ──────────────────────────────────── */
+.basket-row__portion {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-3);
+  /* Indent to align under the meal name, past the thumbnail gutter. */
+  padding-inline-start: calc(4rem + var(--sp-4));
+}
+
+.basket-row__portion-label {
+  font-family: var(--font-mono);
+  font-size: var(--fs-micro);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--larder-slate);
+}
+
+.basket-portion {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-1);
+  background: var(--larder-paper);
+  border: 1px solid var(--larder-hairline);
+  border-radius: var(--radius-pill);
+  padding: 0.15rem;
+}
+
+.basket-portion__btn {
+  display: inline-grid;
+  place-items: center;
+  width: 1.9rem;
+  height: 1.9rem;
+  border: none;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--larder-ink);
+  cursor: pointer;
+  transition: background var(--dur-fast) var(--ease-out);
+}
+
+.basket-portion__btn:hover:not(:disabled) {
+  background: var(--larder-mist);
+}
+
+.basket-portion__btn:disabled {
+  color: var(--larder-hairline);
+  cursor: not-allowed;
+}
+
+.basket-portion__value {
+  min-width: 1.5rem;
+  text-align: center;
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: var(--fs-body);
+  font-weight: 600;
+  color: var(--larder-ink);
+  border-radius: var(--radius-sm);
+}
+
+.basket-portion__value:focus-visible,
+.basket-portion__btn:focus-visible {
+  outline: 3px solid var(--larder-ink);
+  outline-offset: 2px;
+}
+
+.basket-row__portion-reset {
+  font-family: var(--font-body);
+  font-size: var(--fs-meta);
+  font-weight: 600;
+  color: var(--larder-leaf);
+  background: transparent;
+  border: none;
+  padding: var(--sp-1) var(--sp-2);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.basket-row__portion-reset:hover {
+  text-decoration: underline;
+}
+
+.basket-row__portion-hint {
+  font-style: italic;
 }
 
 /* ── Foot: household + preview + CTA ──────────────────────────────────── */

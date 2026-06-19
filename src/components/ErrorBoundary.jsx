@@ -1,5 +1,6 @@
 import { Component } from 'react'
 import { Link } from 'react-router-dom'
+import { reportError } from '../analytics.js'
 
 // Catches render/runtime errors in any screen so a single bad recipe (or data
 // shape) shows a recoverable message instead of blanking the whole app forever.
@@ -19,6 +20,13 @@ export default class ErrorBoundary extends Component {
       // eslint-disable-next-line no-console
       console.error('Larder caught a render error:', error, info)
     }
+    // Report to the privacy-friendly beacon (#17). No-ops without an endpoint.
+    reportError({
+      source: 'boundary',
+      message: error && error.message ? error.message : String(error),
+      stack: error && error.stack ? error.stack : undefined,
+      componentStack: info && info.componentStack ? info.componentStack : undefined,
+    })
   }
 
   componentDidUpdate(prevProps) {

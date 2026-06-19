@@ -1,0 +1,29 @@
+{
+  "name": "Larder — meal browsing & shopping lists",
+  "short_name": "Larder",
+  "description": "Browse meals like a takeaway and Larder writes a tidy, aisle-sorted UK shopping list with quantities scaled to your household.",
+  "id": "/",
+  "start_url": "/?source=pwa",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "lang": "en-GB",
+  "dir": "ltr",
+  "categories": ["food", "lifestyle", "shopping", "utilities"],
+  "theme_color": "#FBFAF6",
+  "background_color": "#FBFAF6",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "type": "image/svg+xml",
+      "sizes": "any",
+      "purpose": "any"
+    },
+    {
+      "src": "/favicon.svg",
+      "type": "image/svg+xml",
+      "sizes": "any",
+      "purpose": "maskable"
+    }
+  ]
+}

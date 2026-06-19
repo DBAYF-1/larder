@@ -1,5 +1,6 @@
-// <FilterBar facets value onChange /> with <FilterChip> + <SortSelect>
-// (CONTRACTS.md §4). Co-located here for cohesion; all three are exported.
+// <FilterBar facets value onChange variant /> with <FilterChip> + <SortSelect>
+// (CONTRACTS.md §4 — `variant` is an additive, optional layout switch; the three
+// contracted props are unchanged). Co-located for cohesion; all are exported.
 //
 //   facets = { cuisines, courses, dietLabels, healthLabels }  // [{value,count}]
 //   value  = { cuisine, course, diet, freeFrom, maxTime, sort }
@@ -7,16 +8,15 @@
 // Each change calls onChange with the FULL next value object. A selected chip
 // toggles back off when clicked again (set the field to null/empty).
 //
-// PRESENTATION (delivery-app pattern — Just Eat / Deliveroo):
-//   • A SLIM bar (~56px): one horizontally FLICKABLE row of primary chips
-//     (course + top cuisines) with momentum scroll, scroll-snap, hidden
-//     scrollbar, fading edges, no wrap — plus a "Filters" button (active-count
-//     badge) that toggles a COLLAPSIBLE panel (CLOSED by default).
-//   • The panel holds the full controls: course, cuisine, diet, free-from,
-//     ready-in time and the sort select, with Clear / Apply affordances.
-//   • The panel is an ABSOLUTE overlay so opening it never grows the slim bar
-//     (the parent .browse-filters wrapper is itself sticky — a flow-expanding
-//     panel would re-create the "filter blocks the screen" bug).
+// Two layouts (`variant`):
+//   • 'standalone' (default) — the full delivery-app widget: a SLIM bar (~56px)
+//     with a flickable primary-chip row + a "Filters" trigger that toggles a
+//     COLLAPSIBLE absolute panel (closed by default) holding the full controls.
+//   • 'embedded' — JUST the control body (the FacetGroups + Ready-in + Sort),
+//     with no slim bar, no trigger and no panel chrome. Browse renders this
+//     INSIDE its own sheet so the facet controls appear exactly ONCE (roadmap
+//     #16: the old default rendered the whole widget inside Browse's sheet,
+//     stacking a second slim bar + trigger + panel on top of Browse's own).
 import { useEffect, useId, useRef, useState } from 'react'
 import './FilterBar.css'
 
@@ -112,7 +112,66 @@ function FacetGroup({ legend, options, selected, onSelect, limit = 10 }) {
   )
 }
 
-export default function FilterBar({ facets, value, onChange }) {
+// The full set of filter controls (course, cuisine, diet, free-from, ready-in,
+// sort). Shared by both FilterBar layouts so the controls live in ONE place and
+// can never duplicate. Free-from is given visual prominence (roadmap #36): it is
+// rendered first under a clear "Free from" heading.
+function FilterControls({ facets, value, set }) {
+  const v = value || {}
+  const f = facets || {}
+  return (
+    <div className="larder-filterbar__controls">
+      <FacetGroup
+        legend="Free from"
+        options={f.healthLabels}
+        selected={v.freeFrom}
+        onSelect={(freeFrom) => set({ freeFrom })}
+      />
+      <FacetGroup
+        legend="Course"
+        options={f.courses}
+        selected={v.course}
+        onSelect={(course) => set({ course })}
+      />
+      <FacetGroup
+        legend="Cuisine"
+        options={f.cuisines}
+        selected={v.cuisine}
+        onSelect={(cuisine) => set({ cuisine })}
+      />
+      <FacetGroup
+        legend="Diet"
+        options={f.dietLabels}
+        selected={v.diet}
+        onSelect={(diet) => set({ diet })}
+      />
+
+      <fieldset className="larder-facet">
+        <legend className="larder-facet__legend">Ready in</legend>
+        <div className="larder-facet__chips">
+          {MAX_TIME_OPTIONS.map((opt) => {
+            const isActive = v.maxTime === opt.value
+            return (
+              <FilterChip
+                key={opt.value}
+                label={opt.label}
+                active={isActive}
+                onClick={() => set({ maxTime: isActive ? null : opt.value })}
+              />
+            )
+          })}
+        </div>
+      </fieldset>
+
+      <div className="larder-facet larder-facet--sort">
+        <span className="larder-facet__legend">Sort</span>
+        <SortSelect value={v.sort} onChange={(sort) => set({ sort })} />
+      </div>
+    </div>
+  )
+}
+
+export default function FilterBar({ facets, value, onChange, variant = 'standalone' }) {
   const v = value || {}
   const f = facets || {}
   const [open, setOpen] = useState(false)
@@ -146,7 +205,9 @@ export default function FilterBar({ facets, value, onChange }) {
   const hasActiveFilters = activeCount > 0
 
   // Close the panel on Escape and on an outside click/tap. Return focus to the
-  // trigger when Escape closes it (keyboard hygiene).
+  // trigger when Escape closes it (keyboard hygiene). These effects no-op for the
+  // embedded layout (the panel is never opened), so they are safe to run in both
+  // layouts — keeping the hook order identical every render (rules-of-hooks).
   useEffect(() => {
     if (!open) return undefined
 
@@ -174,6 +235,18 @@ export default function FilterBar({ facets, value, onChange }) {
   useEffect(() => {
     if (open) panelRef.current?.focus()
   }, [open])
+
+  // ── Embedded layout: JUST the controls, no slim bar / trigger / panel ──────
+  // Browse owns the surrounding sheet, so rendering the whole standalone widget
+  // here would stack a second filter UI (roadmap #16). We render only the body.
+  // (Declared AFTER all hooks so hook order is identical in both layouts.)
+  if (variant === 'embedded') {
+    return (
+      <div className="larder-filterbar larder-filterbar--embedded">
+        <FilterControls facets={f} value={v} set={set} />
+      </div>
+    )
+  }
 
   // The slim flickable row: course chips first, then a few top cuisines.
   const primaryCourses = Array.isArray(f.courses) ? f.courses.slice(0, 6) : []
@@ -316,54 +389,7 @@ export default function FilterBar({ facets, value, onChange }) {
         </div>
 
         <div className="larder-filterbar__panel-body">
-          <FacetGroup
-            legend="Course"
-            options={f.courses}
-            selected={v.course}
-            onSelect={(course) => set({ course })}
-          />
-          <FacetGroup
-            legend="Cuisine"
-            options={f.cuisines}
-            selected={v.cuisine}
-            onSelect={(cuisine) => set({ cuisine })}
-          />
-          <FacetGroup
-            legend="Diet"
-            options={f.dietLabels}
-            selected={v.diet}
-            onSelect={(diet) => set({ diet })}
-          />
-          <FacetGroup
-            legend="Free from"
-            options={f.healthLabels}
-            selected={v.freeFrom}
-            onSelect={(freeFrom) => set({ freeFrom })}
-          />
-
-          <fieldset className="larder-facet">
-            <legend className="larder-facet__legend">Ready in</legend>
-            <div className="larder-facet__chips">
-              {MAX_TIME_OPTIONS.map((opt) => {
-                const isActive = v.maxTime === opt.value
-                return (
-                  <FilterChip
-                    key={opt.value}
-                    label={opt.label}
-                    active={isActive}
-                    onClick={() =>
-                      set({ maxTime: isActive ? null : opt.value })
-                    }
-                  />
-                )
-              })}
-            </div>
-          </fieldset>
-
-          <div className="larder-facet larder-facet--sort">
-            <span className="larder-facet__legend">Sort</span>
-            <SortSelect value={v.sort} onChange={(sort) => set({ sort })} />
-          </div>
+          <FilterControls facets={f} value={v} set={set} />
         </div>
 
         <div className="larder-filterbar__panel-foot">

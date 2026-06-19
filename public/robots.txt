@@ -1,0 +1,12 @@
+# robots.txt for Larder (https://larder-dbayft.web.app)
+# Static file under public/ so Firebase Hosting serves it directly and it
+# bypasses the SPA "**" -> /index.html rewrite (roadmap #10 / seo F4).
+
+User-agent: *
+Allow: /
+
+# Transient, per-user app states — no value to crawlers, no stable content.
+Disallow: /basket
+Disallow: /list
+
+Sitemap: https://larder-dbayft.web.app/sitemap.xml

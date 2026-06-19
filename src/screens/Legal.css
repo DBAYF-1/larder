@@ -1,0 +1,125 @@
+/* Shared styles for the Privacy and Terms screens (roadmap #27).
+   Plain, readable long-form copy. Colours via tokens only. */
+
+.legal {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-6);
+  padding-top: var(--sp-5);
+  max-width: 52rem;
+}
+
+.legal-head {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}
+
+.legal-title {
+  font-family: var(--font-display);
+  font-size: var(--fs-title);
+  color: var(--larder-ink);
+  margin: 0;
+  font-weight: 800;
+}
+
+.legal-lede {
+  font-family: var(--font-body);
+  font-size: var(--fs-card);
+  line-height: var(--lh-body);
+  color: var(--larder-slate);
+  margin: 0;
+}
+
+.legal-updated {
+  font-family: var(--font-mono);
+  font-size: var(--fs-meta);
+  color: var(--larder-slate);
+  margin: 0;
+}
+
+/* ── Sections ─────────────────────────────────────────────────────────── */
+.legal-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  border-top: 1px solid var(--larder-hairline);
+  padding-top: var(--sp-5);
+}
+
+.legal-section:first-of-type {
+  border-top: none;
+  padding-top: 0;
+}
+
+.legal-h2 {
+  font-family: var(--font-display);
+  font-size: var(--fs-section);
+  color: var(--larder-ink);
+  margin: 0;
+  font-weight: 700;
+}
+
+.legal-h3 {
+  font-family: var(--font-body);
+  font-size: var(--fs-body);
+  font-weight: 700;
+  color: var(--larder-ink);
+  margin: var(--sp-2) 0 0;
+}
+
+.legal-p {
+  font-family: var(--font-body);
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+  color: var(--larder-slate);
+  margin: 0;
+}
+
+.legal-p strong {
+  color: var(--larder-ink);
+  font-weight: 600;
+}
+
+.legal-list {
+  margin: 0;
+  padding-left: var(--sp-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+.legal-list li {
+  font-family: var(--font-body);
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+  color: var(--larder-slate);
+}
+
+.legal-list li strong {
+  color: var(--larder-ink);
+  font-weight: 600;
+}
+
+.legal-link {
+  color: var(--larder-stall);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.legal-link:hover {
+  text-decoration: underline;
+}
+
+/* Callout for the honesty notices (AI photos / approximate nutrition). */
+.legal-note {
+  background: var(--larder-mist);
+  border: 1px solid var(--larder-hairline);
+  border-radius: var(--radius-md);
+  padding: var(--sp-4);
+  font-family: var(--font-body);
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+  color: var(--larder-slate);
+  margin: 0;
+}

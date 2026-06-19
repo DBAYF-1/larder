@@ -194,6 +194,87 @@ export async function getFacets(db) {
 }
 
 /**
+ * Read the single pre-baked home/feed document (roadmap #6 — the read-economy
+ * win). Ingestion bakes one doc with `rails` (each carrying lightweight card
+ * projections) and an embedded `facets` summary, so the Browse home renders from
+ * ONE Firestore read instead of ~49 (one query per rail + a facets read).
+ *
+ * The doc may legitimately be absent (the ingest re-run that writes it is gated
+ * on a quota reset), so Browse MUST fall back to live per-rail queries +
+ * getFacets when this returns null or an empty feed. We treat an empty `rails`
+ * array as "no usable feed" so a half-written doc never blanks the home.
+ *
+ * @param {import('firebase/firestore').Firestore} db
+ * @returns {Promise<object|null>} the home/feed doc data (merged with id), or
+ *   null when the doc is absent OR carries no rails (caller should fall back).
+ */
+export async function getHomeFeed(db) {
+  const ref = doc(db, 'home', 'feed')
+  const snap = await getDoc(ref)
+  if (!snap.exists()) return null
+  const data = snap.data()
+  if (!data || !Array.isArray(data.rails) || data.rails.length === 0) return null
+  return { id: snap.id, ...data }
+}
+
+// Firestore caps array-contains-any at 10 comparison values per query, so we
+// search on at most the first 10 distinct tokens. More than ten search words is
+// already an extremely narrow query; the cap keeps us within the single-field
+// index Firestore provides automatically for an array-contains-any.
+const MAX_SEARCH_TOKENS = 10
+
+/**
+ * Tokenise a free-text search string into lowercase word tokens that match the
+ * ingestion-side searchTokens[] field (lowercased title + ingredient tokens).
+ * Splits on any non-alphanumeric run, drops empties and one-character noise, and
+ * de-duplicates while preserving order so the most significant words survive the
+ * MAX_SEARCH_TOKENS cap.
+ *
+ * @param {string} terms
+ * @returns {string[]}
+ */
+export function searchTokensFor(terms) {
+  const raw = String(terms || '')
+    .toLowerCase()
+    .split(/[^a-z0-9]+/i)
+    .filter((t) => t.length >= 2)
+  return [...new Set(raw)]
+}
+
+/**
+ * Real catalogue search over the recipe `searchTokens[]` field (roadmap #22 —
+ * lowercased title + ingredient tokens baked at ingestion). Uses a single
+ * array-contains-any query so it covers titles AND ingredient names across the
+ * whole catalogue with one indexed read (no client-side title-only narrowing).
+ *
+ * array-contains-any is an OR across the supplied tokens, so a multi-word search
+ * returns recipes matching ANY token; the caller can rank/AND-narrow client-side
+ * if it wants stricter matches. Results are ordered by popularity DESC (the
+ * default browse order) via the automatic single-field index.
+ *
+ * @param {import('firebase/firestore').Firestore} db
+ * @param {string} terms  raw search text from the box
+ * @param {{pageSize?:number}} [opts]
+ * @returns {Promise<{recipes:object[], tokens:string[]}>}
+ *   `recipes` the matching page (data merged with id), popularity-ordered;
+ *   `tokens`  the tokens actually queried (empty ⇒ no query was run).
+ */
+export async function searchRecipes(db, terms, { pageSize = 48 } = {}) {
+  const tokens = searchTokensFor(terms).slice(0, MAX_SEARCH_TOKENS)
+  if (tokens.length === 0) return { recipes: [], tokens: [] }
+
+  const q = query(
+    collection(db, 'recipes'),
+    where('searchTokens', 'array-contains-any', tokens),
+    orderBy('popularity', 'desc'),
+    limit(pageSize),
+  )
+  const snap = await getDocs(q)
+  const recipes = snap.docs.map((d) => ({ id: d.id, ...d.data() }))
+  return { recipes, tokens }
+}
+
+/**
  * Read a single recipe by id.
  * @param {import('firebase/firestore').Firestore} db
  * @param {string} id

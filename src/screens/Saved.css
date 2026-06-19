@@ -1,0 +1,155 @@
+/* Saved screen — device-local saved shopping lists (roadmap #24). */
+
+.saved {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-5);
+  padding-top: var(--sp-5);
+}
+
+.saved-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--sp-4);
+}
+
+.saved-head__text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+.saved-title {
+  font-family: var(--font-display);
+  font-size: var(--fs-title);
+  color: var(--larder-ink);
+  margin: 0;
+  font-weight: 800;
+}
+
+.saved-sub {
+  font-family: var(--font-body);
+  font-size: var(--fs-body);
+  color: var(--larder-slate);
+  margin: 0;
+  max-width: 38rem;
+}
+
+.saved-clear {
+  font-family: var(--font-body);
+  font-size: var(--fs-meta);
+  font-weight: 600;
+  color: var(--larder-slate);
+  background: transparent;
+  border: 1px solid var(--larder-hairline);
+  border-radius: var(--radius-pill);
+  padding: var(--sp-2) var(--sp-4);
+  cursor: pointer;
+  transition: border-color var(--dur-fast) var(--ease-out),
+    color var(--dur-fast) var(--ease-out);
+}
+
+.saved-clear:hover {
+  border-color: var(--larder-stall);
+  color: var(--larder-stall);
+}
+
+/* ── Rows ─────────────────────────────────────────────────────────────── */
+.saved-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--larder-hairline);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: var(--larder-receipt);
+}
+
+.saved-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-4);
+  padding: var(--sp-4);
+  border-bottom: 1px solid var(--larder-hairline);
+}
+
+.saved-row:last-child {
+  border-bottom: none;
+}
+
+.saved-row__main {
+  flex: 1 1 14rem;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+}
+
+.saved-row__name {
+  font-family: var(--font-body);
+  font-size: var(--fs-card);
+  font-weight: 700;
+  color: var(--larder-ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.saved-row__meta {
+  font-family: var(--font-mono);
+  font-size: var(--fs-meta);
+  color: var(--larder-slate);
+}
+
+.saved-row__actions {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+.saved-row__again {
+  font-family: var(--font-body);
+  font-size: var(--fs-meta);
+  font-weight: 700;
+  color: var(--larder-leaf-ink);
+  background: var(--larder-leaf);
+  border: 1px solid var(--larder-leaf);
+  border-radius: var(--radius-pill);
+  padding: var(--sp-2) var(--sp-5);
+  cursor: pointer;
+  transition: background var(--dur-fast) var(--ease-out);
+}
+
+.saved-row__again:hover {
+  background: color-mix(in srgb, var(--larder-leaf) 88%, var(--larder-ink));
+}
+
+.saved-row__delete {
+  font-family: var(--font-body);
+  font-size: var(--fs-meta);
+  font-weight: 600;
+  color: var(--larder-stall);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-pill);
+  padding: var(--sp-2) var(--sp-3);
+  cursor: pointer;
+  transition: background var(--dur-fast) var(--ease-out);
+}
+
+.saved-row__delete:hover {
+  background: var(--larder-stall-tint);
+}
+
+.saved-row__again:focus-visible,
+.saved-row__delete:focus-visible,
+.saved-clear:focus-visible {
+  outline: 3px solid var(--larder-ink);
+  outline-offset: 2px;
+}

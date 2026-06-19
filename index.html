@@ -2,23 +2,116 @@
 <html lang="en-GB">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- ── Identity / favicons / PWA (roadmap #10, #32) ──────────────────────── -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="apple-touch-icon" href="/favicon.svg" />
+    <link rel="manifest" href="/manifest.webmanifest" />
     <meta name="theme-color" content="#FBFAF6" />
+    <meta name="application-name" content="Larder" />
+    <meta name="apple-mobile-web-app-title" content="Larder" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="mobile-web-app-capable" content="yes" />
+
+    <!-- ── Primary SEO (roadmap #10) ─────────────────────────────────────────── -->
+    <title>Larder — browse meals, build your UK shopping list</title>
     <meta
       name="description"
-      content="Larder — browse meals like a takeaway, check out a tidy, aisle-sorted UK shopping list."
+      content="Larder is a UK meal-planning tool. Browse meals like a takeaway, add the ones you fancy, and Larder writes a tidy, aisle-sorted shopping list with quantities scaled to your household."
     />
-    <title>Larder — browse meals, build your shopping list</title>
+    <link rel="canonical" href="https://larder-dbayft.web.app/" />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+
+    <!-- ── Open Graph (Facebook, LinkedIn, Slack, WhatsApp, …) (roadmap #10) ──── -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Larder" />
+    <meta property="og:locale" content="en_GB" />
+    <meta property="og:url" content="https://larder-dbayft.web.app/" />
+    <meta property="og:title" content="Larder — browse meals, build your UK shopping list" />
+    <meta
+      property="og:description"
+      content="Browse meals like a takeaway, add the ones you fancy, and Larder writes a tidy, aisle-sorted shopping list with quantities scaled to your household."
+    />
+    <!-- A real raster photo unfurls everywhere (scrapers ignore SVG). 512×512 is a
+         valid square OG image; replace with a 1200×630 brand card once one exists. -->
+    <meta
+      property="og:image"
+      content="https://larder-dbayft.web.app/dishes/curated-curated-spaghetti-bolognese.jpg"
+    />
+    <meta property="og:image:type" content="image/jpeg" />
+    <meta property="og:image:width" content="512" />
+    <meta property="og:image:height" content="512" />
+    <meta property="og:image:alt" content="A bowl of spaghetti bolognese — a Larder meal" />
+
+    <!-- ── Twitter / X card (roadmap #10) ────────────────────────────────────── -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Larder — browse meals, build your UK shopping list" />
+    <meta
+      name="twitter:description"
+      content="Browse meals like a takeaway, add the ones you fancy, and Larder writes a tidy, aisle-sorted shopping list with quantities scaled to your household."
+    />
+    <meta
+      name="twitter:image"
+      content="https://larder-dbayft.web.app/dishes/curated-curated-spaghetti-bolognese.jpg"
+    />
+    <meta name="twitter:image:alt" content="A bowl of spaghetti bolognese — a Larder meal" />
+
+    <!-- ── LCP / latency: warm up the origins the app talks to first (roadmap #2/#10) ──
+         wsrv.nl serves every remote dish photo; firestore.googleapis.com serves the
+         catalogue read. Fonts are below. preconnect opens the TCP+TLS handshake early. -->
+    <link rel="preconnect" href="https://wsrv.nl" crossorigin />
+    <link rel="preconnect" href="https://firestore.googleapis.com" crossorigin />
+    <link rel="dns-prefetch" href="https://wsrv.nl" />
+    <link rel="dns-prefetch" href="https://firestore.googleapis.com" />
+
+    <!-- ── Fonts: trimmed to the weights actually used + preconnect (roadmap #34-html) ──
+         Archivo (display) 600/700/800 · Hanken Grotesk (body) 400/500/600/700 ·
+         Spline Sans Mono (receipt quantities) 400/500/600/700. Dropped the unused
+         Archivo 500/900. Weights here are kept in lockstep with the explicit
+         font-family/font-weight pairs in src/**/*.css so the browser never
+         synthesises a faux-bold. display=swap avoids FOIT. -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800;900&family=Hanken+Grotesk:wght@400;500;600;700&family=Spline+Sans+Mono:wght@400;500;600&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800&family=Hanken+Grotesk:wght@400;500;600;700&family=Spline+Sans+Mono:wght@400;500;600;700&display=swap"
       rel="stylesheet"
     />
   </head>
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
+
+    <!-- ── Service worker registration (roadmap #32) ─────────────────────────────
+         Registered after load so it never competes with the first paint. The SW
+         (public/sw.js) is cache-first for static assets and network-first for
+         Firestore, giving repeat visitors an instant shell and read-quota relief.
+         NOTE: firebase.json ships a REPORT-ONLY CSP with `script-src 'self'`, so
+         this inline script reports a violation but is NOT blocked. If/when that CSP
+         is enforced, either add the matching nonce/hash or move this to a file. -->
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function () {
+          navigator.serviceWorker.register('/sw.js').catch(function (err) {
+            // Non-fatal: the app works fully without the SW.
+            console.warn('Service worker registration failed:', err)
+          })
+        })
+      }
+    </script>
+
+    <!-- ── Privacy-friendly analytics placeholder (roadmap #34-html / #17) ────────
+         Cloudflare Web Analytics: no cookies, no consent banner required, free.
+         TO ACTIVATE: create a site at https://dash.cloudflare.com → Web Analytics,
+         copy the token, paste it into data-cf-beacon below, and uncomment the tag.
+         Gate this behind the privacy notice (#27) before enabling in production. -->
+    <!--
+    <script
+      defer
+      src="https://static.cloudflareinsights.com/beacon.min.js"
+      data-cf-beacon='{"token": "REPLACE_WITH_CLOUDFLARE_WEB_ANALYTICS_TOKEN"}'
+    ></script>
+    -->
   </body>
 </html>

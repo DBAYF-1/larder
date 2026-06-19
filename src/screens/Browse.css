@@ -314,34 +314,43 @@
   margin-top: var(--sp-3);
 }
 
-/* Re-house the shared FilterBar inside the sheet: strip its sticky positioning,
-   height cap, card chrome and shadow so it reads as flat in-sheet content. The
-   component's value/onChange/facets contract is untouched — this only adjusts
-   the embedded instance's layout envelope (Browse owns this presentation). */
-.browse-filter-sheet .larder-filterbar {
+/* The sheet hosts FilterBar in its EMBEDDED layout (roadmap #16): only the
+   control body renders — no second slim bar, trigger or absolute panel — so the
+   facet controls appear exactly once. The embedded layout is already flat and
+   chrome-free; this just guarantees it lays out in flow with no stray sticky/cap
+   (the component's value/onChange/facets contract is untouched). */
+.browse-filter-sheet .larder-filterbar--embedded {
   position: static;
-  top: auto;
   max-height: none;
   overflow: visible;
   padding: 0;
   background: transparent;
   border: 0;
-  border-radius: 0;
   box-shadow: none;
 }
 
-/* The sheet already provides the "Find a meal" / sort context; hide the inner
-   bar's own heading + its duplicate clear control to keep the sheet tidy. */
-.browse-filter-sheet .larder-filterbar__head {
-  justify-content: flex-end;
+/* ── Honest "closest matches" note (roadmap #3) ───────────────────────────
+   Shown above the grid when a filter predicate had no composite index and is
+   applied client-side on the loaded page — the filters never silently lie. */
+.browse-note {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-2);
+  margin: 0;
+  padding: var(--sp-3) var(--sp-4);
+  font-family: var(--font-body);
+  font-size: var(--fs-meta);
+  line-height: var(--lh-body);
+  color: var(--larder-ink);
+  background: var(--larder-stall-tint);
+  border: 1px solid color-mix(in srgb, var(--larder-stall) 30%, transparent);
+  border-radius: var(--radius-md);
 }
 
-.browse-filter-sheet .larder-filterbar__title {
-  display: none;
-}
-
-.browse-filter-sheet .larder-filterbar__foot {
-  display: none;
+.browse-note svg {
+  flex: 0 0 auto;
+  margin-top: 0.1em;
+  color: var(--larder-stall);
 }
 
 /* ── Rails ────────────────────────────────────────────────────────────── */

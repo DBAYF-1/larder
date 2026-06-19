@@ -1,10 +1,23 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { useLocation, useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
+import {
+  collection,
+  getDocs,
+  limit as fsLimit,
+  query,
+  where,
+} from 'firebase/firestore'
 import { db } from '../firebase.js'
 import { getRecipe, getIngredients } from '../lib/queryRecipes.js'
 import { buildShoppingList } from '../lib/buildShoppingList.js'
-import { useBasket } from '../state/basket.js'
-import ReceiptList from '../components/ReceiptList.jsx'
+import {
+  useBasket,
+  encodeBasketParams,
+  decodeBasketParams,
+  saveList as persistSavedList,
+} from '../state/basket.js'
+import { scaleRecipesByPortion } from './Basket.jsx'
+import ReceiptList, { receiptItemKey } from '../components/ReceiptList.jsx'
 import RecipeImage from '../components/RecipeImage.jsx'
 import EmptyState from '../components/EmptyState.jsx'
 import Toast from '../components/Toast.jsx'
@@ -15,17 +28,12 @@ import './ShoppingList.css'
 // Ingredient docs are MEANT to carry a resolved `imageUrl`, but where the
 // ingestion layer hasn't populated one yet we derive a candidate from the
 // canonical name so the list still reads with photos rather than rows of dots.
-// We Title-Case the name (TheMealDB's convention) and URL-encode it. If the
-// derived photo 404s, RecipeImage degrades to its on-brand block; genuine
-// no-name items keep the quiet monochrome dot.
 const MEALDB_INGREDIENT_BASE =
   'https://www.themealdb.com/images/ingredients/'
 
 function mealdbIngredientUrl(name) {
   const clean = String(name || '').trim()
   if (!clean) return null
-  // Title Case each word — "cheddar cheese" -> "Cheddar Cheese" — matching how
-  // TheMealDB names its ingredient image files.
   const titled = clean
     .toLowerCase()
     .replace(/\b([a-z])/g, (m, c) => c.toUpperCase())
@@ -44,20 +52,52 @@ function collectIngredientIds(recipes) {
   return [...ids]
 }
 
+// A stable signature for the built list — recipes + per-recipe servings — used
+// to key persisted tick-state (roadmap #12). Two visits that build the same list
+// share their ticks; changing the meals or portions starts a fresh sheet.
+function listSignature(recipeIds, effectiveHousehold) {
+  return recipeIds
+    .slice()
+    .sort()
+    .map((id) => `${id}:${effectiveHousehold(id)}`)
+    .join('|')
+}
+
+const TICK_PREFIX = 'larder.ticks.'
+
+function readTicks(signature) {
+  if (typeof window === 'undefined' || !signature) return new Set()
+  try {
+    const raw = window.localStorage.getItem(TICK_PREFIX + signature)
+    if (!raw) return new Set()
+    const parsed = JSON.parse(raw)
+    return new Set(Array.isArray(parsed) ? parsed.filter((k) => typeof k === 'string') : [])
+  } catch {
+    return new Set()
+  }
+}
+
+function writeTicks(signature, set) {
+  if (typeof window === 'undefined' || !signature) return
+  try {
+    window.localStorage.setItem(TICK_PREFIX + signature, JSON.stringify([...set]))
+  } catch {
+    // Storage unavailable — ticks persist for the session only.
+  }
+}
+
 // Build a plain-text receipt for copy/share — readable in any messaging app.
-function toPlainText(list) {
+// `shareUrl` (roadmap #11) is appended so a recipient can rebuild the exact list
+// on their own device.
+function toPlainText(list, shareUrl) {
   if (!list) return ''
   const out = ['Larder — your shopping list', '']
   const { totals } = list
   if (totals) {
     const meals =
-      totals.recipeCount === 1
-        ? '1 meal'
-        : `${totals.recipeCount} meals`
+      totals.recipeCount === 1 ? '1 meal' : `${totals.recipeCount} meals`
     const people =
-      totals.householdSize === 1
-        ? '1 person'
-        : `${totals.householdSize} people`
+      totals.householdSize === 1 ? '1 person' : `${totals.householdSize} people`
     out.push(`${meals}, ${totals.itemCount} items, for ${people}.`, '')
   }
   for (const section of list.sections || []) {
@@ -72,6 +112,9 @@ function toPlainText(list) {
       if (item.note) out.push(`      ${item.note}`)
     }
     out.push('')
+  }
+  if (shareUrl) {
+    out.push('Open or re-shop this list:', shareUrl, '')
   }
   out.push('Made with Larder')
   return out.join('\n')
@@ -92,12 +135,142 @@ function ListSkeleton() {
   )
 }
 
+// ── Leftovers panel (roadmap #23) ─────────────────────────────────────────────
+// Aggregates the `spare` the engine already computes per item. Each row links to
+// other recipes that use that ingredient — found on demand (one bounded
+// array-contains read per ingredient, only when the shopper asks) so the list
+// view itself stays cheap on the Spark read budget.
+function LeftoverRow({ leftover, excludeIds }) {
+  const [state, setState] = useState('idle') // idle | loading | done | error
+  const [matches, setMatches] = useState([])
+
+  const handleFind = useCallback(async () => {
+    if (state === 'loading' || state === 'done') return
+    setState('loading')
+    try {
+      // searchTokens carry lowercased title + ingredient tokens. The canonical
+      // name's first word is a reliable token (e.g. "Chopped tomatoes" → set
+      // contains "tomatoes"); we query the most specific single token we have.
+      const token = ingredientToken(leftover.name)
+      if (!token) {
+        setMatches([])
+        setState('done')
+        return
+      }
+      const q = query(
+        collection(db, 'recipes'),
+        where('searchTokens', 'array-contains', token),
+        fsLimit(8),
+      )
+      const snap = await getDocs(q)
+      const exclude = excludeIds instanceof Set ? excludeIds : new Set(excludeIds)
+      const found = snap.docs
+        .map((d) => ({ id: d.id, title: d.data()?.title || 'Untitled meal' }))
+        .filter((r) => !exclude.has(r.id))
+        .slice(0, 5)
+      setMatches(found)
+      setState('done')
+    } catch {
+      setState('error')
+    }
+  }, [state, leftover.name, excludeIds])
+
+  return (
+    <li className="leftovers__row">
+      <div className="leftovers__head">
+        <span className="leftovers__name">{leftover.name}</span>
+        <span className="leftovers__spare">{leftover.spare}</span>
+      </div>
+
+      {state === 'idle' && (
+        <button
+          type="button"
+          className="leftovers__find"
+          onClick={handleFind}
+        >
+          Use it up — find recipes
+        </button>
+      )}
+      {state === 'loading' && (
+        <span className="leftovers__status" aria-live="polite">
+          Finding recipes…
+        </span>
+      )}
+      {state === 'error' && (
+        <button type="button" className="leftovers__find" onClick={handleFind}>
+          Couldn&rsquo;t load — try again
+        </button>
+      )}
+      {state === 'done' && matches.length === 0 && (
+        <span className="leftovers__status">No other recipes found just now.</span>
+      )}
+      {state === 'done' && matches.length > 0 && (
+        <ul className="leftovers__matches">
+          {matches.map((m) => (
+            <li key={m.id}>
+              <Link className="leftovers__match" to={`/meal/${m.id}`}>
+                {m.title}
+              </Link>
+            </li>
+          ))}
+        </ul>
+      )}
+    </li>
+  )
+}
+
+// The most specific lowercase token for an ingredient name — its last word
+// ("Chopped tomatoes" → "tomatoes", "Plain flour" → "flour") matches how
+// searchTokens are built (per-word, lowercased) and avoids over-broad words.
+function ingredientToken(name) {
+  const words = String(name || '')
+    .toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, ' ')
+    .split(/\s+/)
+    .filter(Boolean)
+  return words.length > 0 ? words[words.length - 1] : ''
+}
+
 export default function ShoppingList() {
   const navigate = useNavigate()
   const location = useLocation()
-  const { recipeIds, householdSize } = useBasket()
+  const [searchParams, setSearchParams] = useSearchParams()
+  const {
+    recipeIds,
+    householdSize,
+    portions,
+    effectiveHousehold,
+    replaceBasket,
+  } = useBasket()
 
   const fromBasket = Boolean(location.state?.fromBasket)
+
+  // ── Rehydrate from the URL on first load (roadmap #11) ──────────────────────
+  // A shared link (/list?meals=…&n=…&portions=…) rebuilds the exact list on any
+  // device. We rehydrate ONCE, only when the URL actually carries meals AND they
+  // differ from the current basket, then strip the params (the basket is now the
+  // source of truth and stays the canonical state for the rest of the session).
+  const rehydratedRef = useRef(false)
+  useEffect(() => {
+    if (rehydratedRef.current) return
+    const decoded = decodeBasketParams(searchParams)
+    if (!decoded) {
+      rehydratedRef.current = true
+      return
+    }
+    const currentSig = recipeIds.slice().sort().join(',')
+    const urlSig = decoded.recipeIds.slice().sort().join(',')
+    const portionsMatch =
+      JSON.stringify(decoded.portions || {}) === JSON.stringify(portions || {})
+    if (urlSig !== currentSig || decoded.householdSize !== householdSize || !portionsMatch) {
+      replaceBasket(decoded)
+    }
+    rehydratedRef.current = true
+    // Clear the params so a refresh reads the (now-authoritative) basket and the
+    // address bar stays clean. We keep the route, drop the query.
+    setSearchParams({}, { replace: true })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const [recipes, setRecipes] = useState({})
   const [ingredients, setIngredients] = useState({})
@@ -171,26 +344,83 @@ export default function ShoppingList() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [recipeIdsKey])
 
-  // Run the pure builder client-side.
+  // Run the pure builder client-side, honouring per-meal portion overrides
+  // (roadmap #28) via the scale-by-portion adapter — buildShoppingList's
+  // signature is unchanged.
   const list = useMemo(() => {
     const ids = Object.keys(recipes)
     if (ids.length === 0) return null
     try {
-      return buildShoppingList(
-        { recipeIds: ids, householdSize },
-        recipes,
-        ingredients,
-      )
+      const scaled = scaleRecipesByPortion(recipes, effectiveHousehold)
+      return buildShoppingList({ recipeIds: ids, householdSize: 1 }, scaled, ingredients)
     } catch {
       return null
     }
-  }, [recipes, ingredients, householdSize])
+    // effectiveHousehold closes over portions + householdSize.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [recipes, ingredients, householdSize, portions])
 
-  // Ingredient-photo lookup for the receipt. Each ingredient doc is meant to
-  // carry an `imageUrl` (a free TheMealDB ingredient photo). We prefer that;
-  // where it is absent we derive a candidate from the canonical name (same free
-  // TheMealDB source). ReceiptList falls back to a monochrome dot when there is
-  // no ingredient/name at all, so a row is never blank.
+  // ── Leftovers (roadmap #23): aggregate the engine's `spare` figures ─────────
+  const leftovers = useMemo(() => {
+    if (!list) return []
+    const out = []
+    for (const section of list.sections || []) {
+      for (const item of section.items || []) {
+        if (item?.pack?.spare) {
+          out.push({
+            key: item.ingredientId || item.name,
+            name: item.name,
+            spare: item.pack.spare,
+          })
+        }
+      }
+    }
+    return out
+  }, [list])
+
+  // ── Tick-off state, persisted by list signature (roadmap #12) ───────────────
+  const signature = useMemo(
+    () => (list ? listSignature(Object.keys(recipes), effectiveHousehold) : ''),
+    // effectiveHousehold closes over portions + householdSize.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [list, recipes, householdSize, portions],
+  )
+
+  const [checkedIds, setCheckedIds] = useState(() => new Set())
+
+  // Load the persisted ticks whenever the signature changes (new list = new
+  // sheet). Prune any keys that aren't in the current list so stale ticks don't
+  // linger if the list changed shape.
+  useEffect(() => {
+    if (!signature || !list) {
+      setCheckedIds(new Set())
+      return
+    }
+    const stored = readTicks(signature)
+    const valid = new Set()
+    for (const section of list.sections || []) {
+      for (const item of section.items || []) {
+        const key = receiptItemKey(item)
+        if (stored.has(key)) valid.add(key)
+      }
+    }
+    setCheckedIds(valid)
+  }, [signature, list])
+
+  const handleToggleItem = useCallback(
+    (key) => {
+      setCheckedIds((prev) => {
+        const next = new Set(prev)
+        if (next.has(key)) next.delete(key)
+        else next.add(key)
+        writeTicks(signature, next)
+        return next
+      })
+    },
+    [signature],
+  )
+
+  // Ingredient-photo lookup for the receipt.
   const imageFor = useCallback(
     (ingredientId) => {
       const doc = ingredientId ? ingredients[ingredientId] : null
@@ -201,10 +431,7 @@ export default function ShoppingList() {
     [ingredients],
   )
 
-  // The signature moment: once the list is ready and we arrived from the
-  // basket, flip from "meals" to "collapsed receipt" on the next frame so the
-  // CSS transition runs. Under prefers-reduced-motion the durations are 0 (see
-  // tokens.css) so this becomes an instant cross-fade.
+  // The signature moment: collapse meals into the receipt once ready.
   useEffect(() => {
     if (status !== 'ready' || !list) return undefined
     if (collapsed) return undefined
@@ -227,7 +454,15 @@ export default function ShoppingList() {
     toastTimer.current = setTimeout(() => setToast(false), 2200)
   }, [])
 
-  const plainText = useMemo(() => toPlainText(list), [list])
+  // ── Shareable URL (roadmap #11) ─────────────────────────────────────────────
+  const shareUrl = useMemo(() => {
+    if (recipeIds.length === 0) return ''
+    const params = encodeBasketParams({ recipeIds, householdSize, portions })
+    if (typeof window === 'undefined') return `/list?${params.toString()}`
+    return `${window.location.origin}/list?${params.toString()}`
+  }, [recipeIds, householdSize, portions])
+
+  const plainText = useMemo(() => toPlainText(list, shareUrl), [list, shareUrl])
 
   const canShare =
     typeof navigator !== 'undefined' && typeof navigator.share === 'function'
@@ -236,15 +471,13 @@ export default function ShoppingList() {
     if (typeof window !== 'undefined') window.print()
   }, [])
 
-  const handleCopy = useCallback(async () => {
-    if (!plainText) return
+  const copyText = useCallback(async (text) => {
     try {
       if (navigator?.clipboard?.writeText) {
-        await navigator.clipboard.writeText(plainText)
+        await navigator.clipboard.writeText(text)
       } else {
-        // Fallback for older browsers.
         const ta = document.createElement('textarea')
-        ta.value = plainText
+        ta.value = text
         ta.setAttribute('readonly', '')
         ta.style.position = 'absolute'
         ta.style.left = '-9999px'
@@ -253,23 +486,56 @@ export default function ShoppingList() {
         document.execCommand('copy')
         document.body.removeChild(ta)
       }
-      flashToast('List copied')
+      return true
     } catch {
-      flashToast('Couldn’t copy — try again')
+      return false
     }
-  }, [plainText, flashToast])
+  }, [])
+
+  const handleCopy = useCallback(async () => {
+    if (!plainText) return
+    flashToast((await copyText(plainText)) ? 'List copied' : 'Couldn’t copy — try again')
+  }, [plainText, copyText, flashToast])
+
+  const handleCopyLink = useCallback(async () => {
+    if (!shareUrl) return
+    flashToast((await copyText(shareUrl)) ? 'Link copied' : 'Couldn’t copy — try again')
+  }, [shareUrl, copyText, flashToast])
 
   const handleShare = useCallback(async () => {
-    if (!canShare || !plainText) return
+    if (!canShare) return
     try {
       await navigator.share({
         title: 'My Larder shopping list',
         text: plainText,
+        url: shareUrl || undefined,
       })
     } catch {
       // User dismissed the share sheet — nothing to do.
     }
-  }, [canShare, plainText])
+  }, [canShare, plainText, shareUrl])
+
+  // ── Save this list (roadmap #24) ────────────────────────────────────────────
+  const handleSave = useCallback(() => {
+    if (recipeIds.length === 0) return
+    const meals = Object.values(recipes)
+    const title =
+      meals.length > 0
+        ? meals
+            .slice(0, 3)
+            .map((m) => m.title || 'Meal')
+            .join(', ') + (meals.length > 3 ? `, +${meals.length - 3} more` : '')
+        : undefined
+    persistSavedList({
+      title,
+      recipeIds,
+      householdSize,
+      portions,
+      checked: [...checkedIds],
+      builtAt: Date.now(),
+    })
+    flashToast('List saved — find it under Saved')
+  }, [recipeIds, recipes, householdSize, portions, checkedIds, flashToast])
 
   if (status === 'loading') return <ListSkeleton />
 
@@ -296,6 +562,7 @@ export default function ShoppingList() {
   }
 
   const meals = Object.values(recipes)
+  const basketIdSet = new Set(recipeIds)
 
   return (
     <div className="list">
@@ -312,20 +579,18 @@ export default function ShoppingList() {
           </p>
         </div>
 
-        <div className="list-actions" role="group" aria-label="Export options">
-          <button
-            type="button"
-            className="list-action"
-            onClick={handlePrint}
-          >
+        <div className="list-actions" role="group" aria-label="List actions">
+          <button type="button" className="list-action" onClick={handleSave}>
+            Save this list
+          </button>
+          <button type="button" className="list-action" onClick={handlePrint}>
             Print
           </button>
-          <button
-            type="button"
-            className="list-action"
-            onClick={handleCopy}
-          >
-            Copy to clipboard
+          <button type="button" className="list-action" onClick={handleCopy}>
+            Copy list
+          </button>
+          <button type="button" className="list-action" onClick={handleCopyLink}>
+            Copy link
           </button>
           {canShare ? (
             <button
@@ -333,7 +598,7 @@ export default function ShoppingList() {
               className="list-action list-action--primary"
               onClick={handleShare}
             >
-              Share
+              Share list
             </button>
           ) : null}
         </div>
@@ -363,11 +628,43 @@ export default function ShoppingList() {
         </div>
 
         <div className="list-collapse__receipt">
-          <ReceiptList list={list} imageFor={imageFor} />
+          <ReceiptList
+            list={list}
+            imageFor={imageFor}
+            checkedIds={checkedIds}
+            onToggleItem={handleToggleItem}
+          />
         </div>
       </div>
 
-      <Toast message={typeof toast === 'string' ? toast : 'Done'} show={Boolean(toast)} />
+      {/* Leftovers from this shop (roadmap #23). */}
+      {leftovers.length > 0 ? (
+        <section className="leftovers" aria-labelledby="leftovers-title">
+          <div className="leftovers__intro">
+            <h2 className="leftovers__title" id="leftovers-title">
+              Leftovers from this shop
+            </h2>
+            <p className="leftovers__blurb">
+              Buying in packs leaves a little spare. Here&rsquo;s what&rsquo;s
+              over — and other meals that put it to use.
+            </p>
+          </div>
+          <ul className="leftovers__list">
+            {leftovers.map((leftover) => (
+              <LeftoverRow
+                key={leftover.key}
+                leftover={leftover}
+                excludeIds={basketIdSet}
+              />
+            ))}
+          </ul>
+        </section>
+      ) : null}
+
+      <Toast
+        message={typeof toast === 'string' ? toast : 'Done'}
+        show={Boolean(toast)}
+      />
     </div>
   )
 }
