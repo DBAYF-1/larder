@@ -21,7 +21,12 @@ import ReceiptList, { receiptItemKey } from '../components/ReceiptList.jsx'
 import RecipeImage from '../components/RecipeImage.jsx'
 import EmptyState from '../components/EmptyState.jsx'
 import Toast from '../components/Toast.jsx'
+import { GROCERS, searchUrl } from '../lib/supermarket.js'
+import { trackEvent } from '../analytics.js'
 import './ShoppingList.css'
+import './Supermarket.css'
+
+const GROCER_KEY = 'larder.grocer'
 
 // TheMealDB serves a free ingredient photo at a name-keyed URL:
 //   https://www.themealdb.com/images/ingredients/{Name}.png
@@ -279,6 +284,30 @@ export default function ShoppingList() {
   const [toast, setToast] = useState(false)
   const toastTimer = useRef(null)
 
+  // Remembered supermarket choice (roadmap #45). Persisted so the shopper picks
+  // their shop once and it sticks across visits.
+  const [grocerId, setGrocerId] = useState(() => {
+    if (typeof window === 'undefined') return ''
+    try {
+      return window.localStorage.getItem(GROCER_KEY) || ''
+    } catch {
+      return ''
+    }
+  })
+  const chooseGrocer = useCallback(
+    (id) => {
+      const next = id === grocerId ? '' : id // tapping the active shop clears it
+      setGrocerId(next)
+      try {
+        if (next) window.localStorage.setItem(GROCER_KEY, next)
+        else window.localStorage.removeItem(GROCER_KEY)
+      } catch {
+        /* storage unavailable — the choice lasts the session only */
+      }
+    },
+    [grocerId],
+  )
+
   const recipeIdsKey = useMemo(
     () => recipeIds.slice().sort().join(','),
     [recipeIds],
@@ -373,6 +402,18 @@ export default function ShoppingList() {
             spare: item.pack.spare,
           })
         }
+      }
+    }
+    return out
+  }, [list])
+
+  // Flat list of every receipt item, for the supermarket panel (roadmap #45).
+  const allItems = useMemo(() => {
+    if (!list) return []
+    const out = []
+    for (const section of list.sections || []) {
+      for (const item of section.items || []) {
+        if (item?.name) out.push(item)
       }
     }
     return out
@@ -563,6 +604,7 @@ export default function ShoppingList() {
 
   const meals = Object.values(recipes)
   const basketIdSet = new Set(recipeIds)
+  const activeGrocer = GROCERS.find((g) => g.id === grocerId) || null
 
   return (
     <div className="list">
@@ -636,6 +678,77 @@ export default function ShoppingList() {
           />
         </div>
       </div>
+
+      {/* Send to a supermarket (roadmap #45). Honest search deep-links into each
+          grocer's own site — no partnership, prices/stock are the grocer's. */}
+      <section className="grocer" aria-labelledby="grocer-title">
+        <div className="grocer__intro">
+          <h2 className="grocer__title" id="grocer-title">
+            Shop this list at a supermarket
+          </h2>
+          <p className="grocer__blurb">
+            Pick your shop, then tap any item to find it there. These open the
+            supermarket&rsquo;s own search in a new tab &mdash; prices and stock
+            are theirs.
+          </p>
+        </div>
+
+        <div
+          className="grocer__pick"
+          role="group"
+          aria-label="Choose a supermarket"
+        >
+          {GROCERS.map((g) => (
+            <button
+              key={g.id}
+              type="button"
+              className={'grocer__chip' + (grocerId === g.id ? ' is-active' : '')}
+              onClick={() => chooseGrocer(g.id)}
+              aria-pressed={grocerId === g.id}
+            >
+              <span
+                className="grocer__dot"
+                style={{ backgroundColor: g.brandColour }}
+                aria-hidden="true"
+              />
+              {g.name}
+            </button>
+          ))}
+        </div>
+
+        {activeGrocer ? (
+          <ul className="grocer__items">
+            {allItems.map((item) => {
+              const url = searchUrl(activeGrocer.id, item.name)
+              if (!url) return null
+              return (
+                <li className="grocer__item" key={receiptItemKey(item)}>
+                  <span className="grocer__itemname">
+                    {item.name}
+                    {item.displayQuantity ? (
+                      <span className="grocer__itemqty"> · {item.displayQuantity}</span>
+                    ) : null}
+                  </span>
+                  <a
+                    className="grocer__find"
+                    href={url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() =>
+                      trackEvent('supermarket_open', { grocer: activeGrocer.id })
+                    }
+                  >
+                    Find at {activeGrocer.name}
+                    <span aria-hidden="true"> ↗</span>
+                  </a>
+                </li>
+              )
+            })}
+          </ul>
+        ) : (
+          <p className="grocer__hint">Choose a shop above to get item links.</p>
+        )}
+      </section>
 
       {/* Leftovers from this shop (roadmap #23). */}
       {leftovers.length > 0 ? (

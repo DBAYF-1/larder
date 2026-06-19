@@ -327,6 +327,7 @@ export function decodeBasketParams(input) {
   const householdSize = clampHousehold(params.get('n') ?? DEFAULT_HOUSEHOLD_SIZE)
 
   const allowed = new Set(recipeIds)
+  /** @type {Record<string, number>} */
   const portions = {}
   const portionsRaw = params.get('portions')
   if (portionsRaw) {

@@ -1,0 +1,270 @@
+/* Cook mode (roadmap #48) — a calm, high-contrast, kitchen-friendly full screen. */
+
+.cook {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: var(--sp-4) var(--sp-4) var(--sp-8);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+}
+
+.cook--loading {
+  gap: var(--sp-5);
+}
+
+/* ── Header ──────────────────────────────────────────────────────────────── */
+.cook-head {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: var(--sp-3);
+}
+
+.cook-head__title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--fs-section);
+  letter-spacing: var(--ls-tight);
+  color: var(--larder-ink);
+  margin: 0;
+  text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cook-head__exit {
+  inline-size: 40px;
+  block-size: 40px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--larder-border-interactive);
+  background: var(--larder-elevated);
+  color: var(--larder-ink);
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: background var(--dur-fast) var(--ease-out);
+}
+.cook-head__exit:hover {
+  background: var(--larder-mist);
+}
+
+.cook-head__meal {
+  font-size: var(--fs-meta);
+  color: var(--larder-stall-strong);
+  text-decoration: none;
+  font-weight: 600;
+  padding: var(--sp-2) var(--sp-3);
+  border-radius: var(--radius-pill);
+}
+.cook-head__meal:hover {
+  background: var(--larder-stall-tint);
+}
+
+/* ── Progress ────────────────────────────────────────────────────────────── */
+.cook-progress {
+  block-size: 8px;
+  border-radius: var(--radius-pill);
+  background: var(--larder-mist);
+  overflow: hidden;
+}
+.cook-progress__fill {
+  display: block;
+  block-size: 100%;
+  background: var(--larder-leaf);
+  border-radius: inherit;
+  transition: width var(--dur-mid) var(--ease-out);
+}
+
+.cook-count {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: var(--fs-meta);
+  color: var(--larder-slate);
+  text-align: center;
+}
+.cook-count strong {
+  color: var(--larder-ink);
+}
+
+/* ── The current step ────────────────────────────────────────────────────── */
+.cook-stage {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  min-block-size: 38vh;
+  display: flex;
+}
+.cook-stage__step {
+  background: var(--larder-elevated);
+  border: 1px solid var(--larder-hairline);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  padding: var(--sp-6) var(--sp-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+  flex: 1;
+}
+.cook-stage__num {
+  inline-size: 44px;
+  block-size: 44px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius-pill);
+  background: var(--larder-leaf);
+  color: var(--larder-leaf-ink);
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.2rem;
+}
+.cook-stage__text {
+  margin: 0;
+  font-size: clamp(1.25rem, 3.4vw, 1.7rem);
+  line-height: 1.45;
+  color: var(--larder-ink);
+}
+
+/* ── Per-step timer ──────────────────────────────────────────────────────── */
+.cook-timer {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  flex-wrap: wrap;
+  padding: var(--sp-3) var(--sp-4);
+  background: var(--larder-paper-2);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--larder-hairline);
+}
+.cook-timer.is-done {
+  background: var(--larder-leaf-tint);
+  border-color: var(--larder-leaf);
+}
+.cook-timer__time {
+  font-family: var(--font-mono);
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: var(--larder-ink);
+  min-inline-size: 4ch;
+}
+.cook-timer__controls {
+  display: flex;
+  gap: var(--sp-2);
+}
+.cook-timer__btn {
+  border: none;
+  border-radius: var(--radius-pill);
+  padding: var(--sp-2) var(--sp-4);
+  background: var(--larder-ink);
+  color: var(--larder-paper);
+  font-weight: 600;
+  font-size: var(--fs-meta);
+  cursor: pointer;
+}
+.cook-timer__btn--quiet {
+  background: transparent;
+  color: var(--larder-slate);
+  border: 1px solid var(--larder-border-interactive);
+}
+
+/* ── Big nav ─────────────────────────────────────────────────────────────── */
+.cook-nav {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--sp-3);
+  position: sticky;
+  bottom: var(--sp-3);
+}
+.cook-nav__btn {
+  padding: var(--sp-4);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--larder-border-interactive);
+  background: var(--larder-elevated);
+  color: var(--larder-ink);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--fs-card);
+  cursor: pointer;
+  transition: transform var(--dur-fast) var(--ease-out);
+}
+.cook-nav__btn:active {
+  transform: scale(0.98);
+}
+.cook-nav__btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.cook-nav__btn--primary {
+  background: var(--larder-stall-strong);
+  border-color: var(--larder-stall-strong);
+  color: var(--larder-stall-ink);
+  box-shadow: var(--shadow-stall);
+}
+.cook-nav__btn--primary:hover {
+  background: var(--larder-stall-strong-press);
+}
+
+/* ── Ingredients reference ───────────────────────────────────────────────── */
+.cook-aside {
+  border: 1px solid var(--larder-hairline);
+  border-radius: var(--radius-md);
+  background: var(--larder-receipt);
+  padding: 0 var(--sp-4);
+}
+.cook-aside__summary {
+  padding: var(--sp-3) 0;
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--larder-ink);
+  list-style-position: inside;
+}
+.cook-aside__list {
+  margin: 0 0 var(--sp-3);
+  padding-left: var(--sp-5);
+  color: var(--larder-ink-soft);
+  line-height: var(--lh-body);
+}
+.cook-aside__empty {
+  margin: 0 0 var(--sp-3);
+  color: var(--larder-slate);
+}
+
+/* ── Jump dots ───────────────────────────────────────────────────────────── */
+.cook-jump {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+  justify-content: center;
+}
+.cook-jump__dot {
+  inline-size: 12px;
+  block-size: 12px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--larder-border-interactive);
+  background: var(--larder-mist);
+  cursor: pointer;
+  padding: 0;
+}
+.cook-jump__dot.is-current {
+  background: var(--larder-leaf);
+  border-color: var(--larder-leaf);
+  transform: scale(1.2);
+}
+
+/* ── Skeletons ───────────────────────────────────────────────────────────── */
+.cook-skel {
+  border-radius: var(--radius-md);
+  background: var(--larder-mist);
+}
+.cook-skel--bar {
+  block-size: 44px;
+}
+.cook-skel--step {
+  block-size: 40vh;
+}
+
+@media (max-width: 480px) {
+  .cook-head__title {
+    font-size: var(--fs-card);
+  }
+}

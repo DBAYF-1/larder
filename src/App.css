@@ -65,6 +65,46 @@
   }
 }
 
+/* ── Header actions: Plan-week link + basket (#43) ─────────────────────────── */
+.larder-header__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+.larder-plan-link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-2) var(--sp-3);
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--larder-border-interactive);
+  background: var(--larder-elevated);
+  color: var(--larder-ink);
+  font-family: var(--font-body);
+  font-size: var(--fs-meta);
+  font-weight: 600;
+  text-decoration: none;
+  transition: background var(--dur-fast) var(--ease-out);
+}
+.larder-plan-link:hover {
+  background: var(--larder-mist);
+}
+/* On the smallest screens, keep just the calendar glyph to save space. */
+@media (max-width: 420px) {
+  .larder-plan-link span {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+}
+
 /* ── Footer legal links (#27) ──────────────────────────────────────────────
    A small inline nav for Sources / Privacy / Terms. */
 .larder-footer__links {

@@ -1,0 +1,112 @@
+/* Supermarket deep-link panel on the shopping list (roadmap #45). */
+
+.grocer {
+  margin-top: var(--sp-6);
+  padding: var(--sp-5);
+  background: var(--larder-elevated);
+  border: 1px solid var(--larder-hairline);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-soft);
+}
+
+.grocer__intro {
+  margin-bottom: var(--sp-4);
+}
+.grocer__title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--fs-section);
+  letter-spacing: var(--ls-tight);
+  color: var(--larder-ink);
+  margin: 0 0 var(--sp-2);
+}
+.grocer__blurb {
+  margin: 0;
+  color: var(--larder-ink-soft);
+  font-size: var(--fs-meta);
+  line-height: var(--lh-body);
+  max-width: 60ch;
+}
+
+/* ── Grocer chooser ──────────────────────────────────────────────────────── */
+.grocer__pick {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+}
+.grocer__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-2) var(--sp-3);
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--larder-border-interactive);
+  background: var(--larder-paper);
+  color: var(--larder-ink);
+  font-size: var(--fs-meta);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out);
+}
+.grocer__chip:hover {
+  background: var(--larder-mist);
+}
+.grocer__chip.is-active {
+  background: var(--larder-ink);
+  color: var(--larder-paper);
+  border-color: var(--larder-ink);
+}
+.grocer__dot {
+  inline-size: 12px;
+  block-size: 12px;
+  border-radius: var(--radius-pill);
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.15);
+}
+
+/* ── Item links ──────────────────────────────────────────────────────────── */
+.grocer__items {
+  list-style: none;
+  margin: var(--sp-4) 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+.grocer__item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  padding: var(--sp-3) 0;
+  border-top: 1px solid var(--larder-hairline);
+}
+.grocer__item:first-child {
+  border-top: none;
+}
+.grocer__itemname {
+  color: var(--larder-ink);
+  font-size: var(--fs-body);
+}
+.grocer__itemqty {
+  color: var(--larder-slate);
+  font-family: var(--font-mono);
+  font-size: var(--fs-meta);
+}
+.grocer__find {
+  flex: none;
+  color: var(--larder-stall-strong);
+  font-weight: 600;
+  font-size: var(--fs-meta);
+  text-decoration: none;
+  white-space: nowrap;
+  padding: var(--sp-1) var(--sp-2);
+  border-radius: var(--radius-sm);
+}
+.grocer__find:hover {
+  background: var(--larder-stall-tint);
+}
+.grocer__hint {
+  margin: var(--sp-3) 0 0;
+  color: var(--larder-slate);
+  font-size: var(--fs-meta);
+}

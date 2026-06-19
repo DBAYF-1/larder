@@ -3,6 +3,8 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import { db } from '../firebase.js'
 import { getRecipe, getIngredients } from '../lib/queryRecipes.js'
 import { useBasket } from '../state/basket.js'
+import { recordView } from '../lib/personalize.js'
+import { useDocumentTitle } from '../useDocumentTitle.js'
 import RecipeImage from '../components/RecipeImage.jsx'
 import MealBadgeRow from '../components/MealBadgeRow.jsx'
 import IngredientLine from '../components/IngredientLine.jsx'
@@ -58,6 +60,9 @@ export default function Meal() {
   const [ingredientImages, setIngredientImages] = useState({})
   const [toast, setToast] = useState(false)
   const toastTimer = useRef(null)
+
+  // Refine the route's coarse title to the meal name once loaded (#10-titles).
+  useDocumentTitle(recipe?.title)
 
   useEffect(() => {
     let live = true
@@ -127,7 +132,65 @@ export default function Meal() {
     [],
   )
 
+  // Once the recipe is in hand: record the view for personalisation (#39) and
+  // inject Recipe schema.org JSON-LD (#14) so this page is eligible for Google
+  // rich results even as a client-rendered SPA. The <script> is removed on
+  // unmount / recipe change, so exactly one is ever present.
+  useEffect(() => {
+    if (!recipe) return undefined
+    recordView(recipe)
+
+    if (typeof document === 'undefined') return undefined
+    const lines = Array.isArray(recipe.ingredients) ? recipe.ingredients : []
+    const ld = {
+      '@context': 'https://schema.org',
+      '@type': 'Recipe',
+      name: recipe.title || 'Meal',
+    }
+    if (recipe.imageUrl) ld.image = [recipe.imageUrl]
+    if (recipe.cuisine) ld.recipeCuisine = recipe.cuisine
+    if (recipe.course) ld.recipeCategory = recipe.course
+    if (recipe.servingsBase) ld.recipeYield = String(recipe.servingsBase)
+    if (typeof recipe.totalTimeMinutes === 'number' && recipe.totalTimeMinutes > 0) {
+      ld.totalTime = `PT${Math.round(recipe.totalTimeMinutes)}M`
+    }
+    const ingredientStrings = lines
+      .map((l) => String(l?.raw || l?.name || '').trim())
+      .filter(Boolean)
+    if (ingredientStrings.length > 0) ld.recipeIngredient = ingredientStrings
+    if (recipe.instructionsExternal === false) {
+      const stepTexts = toSteps(recipe.instructions)
+      if (stepTexts.length > 0) {
+        ld.recipeInstructions = stepTexts.map((text, i) => ({
+          '@type': 'HowToStep',
+          position: i + 1,
+          text,
+        }))
+      }
+    }
+    const kcal = recipe.nutritionPerServing?.energyKcal
+    if (typeof kcal === 'number' && kcal > 0) {
+      ld.nutrition = {
+        '@type': 'NutritionInformation',
+        calories: `${Math.round(kcal)} kcal`,
+      }
+    }
+
+    const el = document.createElement('script')
+    el.type = 'application/ld+json'
+    el.setAttribute('data-larder-jsonld', '')
+    el.textContent = JSON.stringify(ld)
+    document.head.appendChild(el)
+    return () => {
+      el.remove()
+    }
+  }, [recipe])
+
   const inBasket = recipe ? has(recipe.id) : false
+  // Cook mode is offered only when the method is on-site and has steps to walk.
+  const hasInternalSteps =
+    recipe?.instructionsExternal === false &&
+    toSteps(recipe?.instructions).length > 0
 
   const handleAdd = useCallback(() => {
     if (!recipe || !recipe.id) return
@@ -248,6 +311,14 @@ export default function Meal() {
               'Add to basket'
             )}
           </button>
+          {hasInternalSteps ? (
+            <Link
+              to={`/cook/${recipe.id}`}
+              className="u-btn u-btn--quiet meal-cook"
+            >
+              <span aria-hidden="true">▶</span> Cook mode
+            </Link>
+          ) : null}
           {inBasket ? (
             <span className="meal-actions__hint">Tap again to remove it.</span>
           ) : null}

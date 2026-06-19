@@ -41,6 +41,8 @@ const Sources = lazy(() => import('./screens/Sources.jsx'))
 const Saved = lazy(() => import('./screens/Saved.jsx'))
 const Privacy = lazy(() => import('./screens/Privacy.jsx'))
 const Terms = lazy(() => import('./screens/Terms.jsx'))
+const Planner = lazy(() => import('./screens/Planner.jsx'))
+const CookMode = lazy(() => import('./screens/CookMode.jsx'))
 
 const SITE_NAME = 'Larder'
 
@@ -53,6 +55,7 @@ const ROUTE_TITLES = {
   '/list': 'Your shopping list',
   '/sources': 'Sources and credits',
   '/saved': 'Saved lists',
+  '/planner': 'Plan your week',
   '/privacy': 'Privacy policy',
   '/terms': 'Terms of use',
 }
@@ -60,6 +63,7 @@ const ROUTE_TITLES = {
 function titleForPath(pathname) {
   if (ROUTE_TITLES[pathname]) return ROUTE_TITLES[pathname]
   if (pathname.startsWith('/meal/')) return 'Meal'
+  if (pathname.startsWith('/cook/')) return 'Cook mode'
   return 'Page not found'
 }
 
@@ -77,7 +81,26 @@ function Header() {
           <span>Larder</span>
         </Link>
 
-        <BasketButton count={count} onClick={() => navigate('/basket')} />
+        <div className="larder-header__actions">
+          <Link to="/planner" className="larder-plan-link">
+            <svg
+              viewBox="0 0 24 24"
+              width="18"
+              height="18"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
+              <rect x="3" y="4" width="18" height="18" rx="2" />
+              <path d="M16 2v4M8 2v4M3 10h18" />
+            </svg>
+            <span>Plan week</span>
+          </Link>
+          <BasketButton count={count} onClick={() => navigate('/basket')} />
+        </div>
       </div>
     </header>
   )
@@ -192,6 +215,8 @@ export default function App() {
               <Route path="basket" element={<Basket />} />
               <Route path="list" element={<ShoppingList />} />
               <Route path="saved" element={<Saved />} />
+              <Route path="planner" element={<Planner />} />
+              <Route path="cook/:id" element={<CookMode />} />
               <Route path="sources" element={<Sources />} />
               <Route path="privacy" element={<Privacy />} />
               <Route path="terms" element={<Terms />} />

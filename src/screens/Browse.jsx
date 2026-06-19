@@ -40,6 +40,7 @@ import {
   searchRecipes,
 } from '../lib/queryRecipes.js'
 import { useBasket } from '../state/basket.js'
+import { getRecentlyViewed, getAffinities } from '../lib/personalize.js'
 import MealCard from '../components/MealCard.jsx'
 import FilterBar, { FilterChip } from '../components/FilterBar.jsx'
 import EmptyState from '../components/EmptyState.jsx'
@@ -355,6 +356,9 @@ export default function Browse() {
   const [facets, setFacets] = useState(null)
   const [feed, setFeed] = useState(null) // home/feed doc (null until resolved)
   const [feedResolved, setFeedResolved] = useState(false)
+  // Device-only personalisation signals (roadmap #39), read once on mount. Browse
+  // remounts on navigation back from a meal, so this stays fresh after a view.
+  const [signals, setSignals] = useState({ recent: [], cuisines: [], courses: [] })
   const sheetId = useId()
 
   // Grid (filtered/search) state.
@@ -436,6 +440,13 @@ export default function Browse() {
     return () => {
       live = false
     }
+  }, [])
+
+  // Read personalisation signals once on mount (localStorage, no reads/cost).
+  useEffect(() => {
+    const recent = getRecentlyViewed(12)
+    const aff = getAffinities()
+    setSignals({ recent, cuisines: aff.cuisines, courses: aff.courses })
   }, [])
 
   // Fallback facets read — ONLY when the feed (which embeds facets) is absent.
@@ -844,6 +855,63 @@ export default function Browse() {
     return RAILS
   }, [feed])
 
+  // ── "For you" rail (roadmap #39) ─────────────────────────────────────────
+  // Built ONLY from in-memory signals + the already-loaded feed cards — never an
+  // extra Firestore read. Recently-viewed meals lead (enriched with the richer
+  // feed card when the meal is also in the feed), then we pad with feed cards
+  // matching the visitor's top cuisine/course affinity. Null when no history, so
+  // a first-time visitor never sees an empty or generic rail.
+  const forYouRail = useMemo(() => {
+    if (!signals.recent || signals.recent.length === 0) return null
+
+    const byId = new Map()
+    const pool = []
+    if (feed && Array.isArray(feed.rails)) {
+      for (const rail of feed.rails) {
+        for (const c of Array.isArray(rail.cards) ? rail.cards : []) {
+          if (c && c.id && !byId.has(c.id)) {
+            byId.set(c.id, c)
+            pool.push(c)
+          }
+        }
+      }
+    }
+
+    const cards = []
+    const seen = new Set()
+    for (const ref of signals.recent) {
+      if (!ref || !ref.id || seen.has(ref.id)) continue
+      // Prefer the richer feed card (badges/time/kcal) when the meal is in the feed.
+      cards.push({ ...ref, ...(byId.get(ref.id) || {}) })
+      seen.add(ref.id)
+    }
+
+    const topCuisine = signals.cuisines[0]?.value
+    const topCourse = signals.courses[0]?.value
+    for (const c of pool) {
+      if (cards.length >= 12) break
+      if (seen.has(c.id)) continue
+      if ((topCuisine && c.cuisine === topCuisine) || (topCourse && c.course === topCourse)) {
+        cards.push(c)
+        seen.add(c.id)
+      }
+    }
+
+    if (cards.length === 0) return null
+    const apply = topCuisine
+      ? { cuisine: topCuisine }
+      : topCourse
+        ? { course: topCourse }
+        : {}
+    return {
+      key: 'foryou',
+      title: 'For you',
+      blurb: 'Picked from what you’ve been looking at.',
+      cards: cards.slice(0, 12),
+      apply,
+    }
+  }, [signals, feed])
+
   // Honest "closest matches" note copy (roadmap #3).
   const narrowedNote = useMemo(() => {
     if (narrowedKeys.length === 0) return null
@@ -1032,6 +1100,15 @@ export default function Browse() {
       {/* Default view: curated rails. Filtered / searching view: the grid. */}
       {!filtering ? (
         <div className="browse-rails">
+          {forYouRail ? (
+            <Rail
+              key="foryou"
+              rail={forYouRail}
+              isInBasket={has}
+              onToggle={handleToggle}
+              onSeeAll={applyRail}
+            />
+          ) : null}
           {railsToRender.map((rail) => (
             <Rail
               key={rail.key}
