@@ -186,6 +186,77 @@ const RECIPE_PHRASINGS = {
   salt: ['sea salt', 'table salt', 'flaky sea salt', 'kosher salt', 'fine salt'],
 }
 
+// ── Resolution-rate fixes (roadmap #31). Additional phrasings, qualifier-laden
+// recipe phrases, common misspellings and prep-prefix artefacts that the parser
+// leaves behind, each folded onto an existing canonical (a curated/batch record
+// or one of the data/ingredients/resolution-fixes.js records). These close the
+// most frequent still-unresolved cores seen when the real parse->resolve pipeline
+// runs over the TheMealDB universe and the curated corpus. Written
+// canonical-form: [variant phrasings].
+const RESOLUTION_FIXES = {
+  // — Common misspellings seen in TheMealDB ingredient names.
+  cardamom: ['cardomom', 'cardamon', 'cardamum', 'ground cardomom', 'cardamom pods'],
+  coriander: ['cilantro leaves', 'fresh cilantro', 'chopped cilantro', 'corriander', 'coriander leaves', 'fresh coriander'],
+  'coconut milk': ['cocnut milk'],
+
+  // — "X powder" / "ground X" spice phrasings that should fold onto the spice.
+  turmeric: ['turmeric powder', 'ground turmeric powder', 'haldi'],
+  ginger: ['ginger powder', 'ground ginger powder'],
+  cinnamon: ['cinnamon powder', 'ground cinnamon powder'],
+  'chilli powder': ['red chilli powder', 'hot chilli powder', 'red chili powder', 'kashmiri chilli powder', 'kashmiri chili powder'],
+  'curry powder': ['jamaican curry powder', 'madras curry powder', 'mild curry powder', 'hot curry powder'],
+  paprika: ['sweet smoked paprika', 'sweet paprika', 'hot paprika', 'spanish paprika'],
+  'smoked paprika': ['smoked sweet paprika', 'hot smoked paprika'],
+
+  // — Pepper (capsicum) phrasings (the bare colour names fuzzy-matched weakly).
+  'pepper (capsicum)': ['red pepper', 'green pepper', 'yellow pepper', 'orange pepper', 'red peppers', 'green peppers', 'yellow peppers', 'bell peppers', 'mixed peppers', 'romano pepper', 'romano peppers', 'sweet pointed pepper'],
+
+  // — Garlic / onion bulb phrasings.
+  garlic: ['garlic bulb', 'garlic bulbs', 'bulb of garlic', 'head of garlic', 'whole garlic'],
+
+  // — Unwaxed citrus (the "unwaxed" qualifier blocked the bare fruit match).
+  lemon: ['unwaxed lemon', 'unwaxed lemons', 'juice of a lemon', 'zest of a lemon'],
+  lime: ['unwaxed lime', 'unwaxed limes', 'juice of a lime', 'zest of a lime'],
+
+  // — Apple varieties → the generic canonical.
+  apple: ['braeburn apples', 'braeburn apple', 'gala apples', 'gala apple', 'pink lady apples', 'eating apples', 'eating apple', 'dessert apple', 'dessert apples'],
+
+  // — Nuts: "shelled X" prep-prefix.
+  hazelnuts: ['shelled hazelnuts', 'blanched hazelnuts', 'whole hazelnuts'],
+
+  // — Chickpeas: "can of" container phrasing the parser keeps.
+  chickpeas: ['can of chickpeas', 'tin of chickpeas', 'can chickpeas', 'tinned chickpeas', 'canned chickpeas'],
+
+  // — Plant milks: "vegetable milk" (and its typo) → soya milk; "plant milk".
+  'soya milk': ['vegetable milk', 'vegetable millk', 'plant milk', 'plant-based milk', 'dairy-free milk', 'dairy free milk'],
+
+  // — Parsley prep-prefix artefact ("Freshly Chopped Parsley" -> "freshly parsley").
+  parsley: ['freshly parsley', 'freshly chopped parsley', 'flat leaf parsley', 'flat-leaf parsley', 'curly parsley', 'italian parsley'],
+
+  // — Whole wheat berries → wholemeal flour canonical ("Whole Wheat" -> "wheat").
+  'wholemeal flour': ['whole wheat', 'wheat', 'wheat berries', 'wholewheat', 'wheat flour'],
+
+  // — Frozen mixed berries phrasings.
+  'frozen mixed berries': ['mixed summer berries', 'mixed frozen berries', 'summer berries', 'mixed berries', 'frozen berries', 'frozen summer fruits', 'summer fruits'],
+
+  // — Generic "dried fruit" descriptor phrasings.
+  'dried fruit': ['mixed dried fruit', 'dried mixed fruit', 'luxury dried fruit'],
+
+  // — Stock phrasings that were fuzzy-matching weakly onto "stock cube".
+  'stock cube': ['hot beef stock', 'unsalted beef stock', 'vegetable stock cube', 'vegetable stock cubes', 'beef stock cube', 'beef stock cubes', 'chicken stock cube', 'chicken stock cubes', 'beef stock concentrate', 'chicken stock concentrate', 'beef stock pot', 'chicken stock pot', 'vegetable stock pot'],
+
+  // — Phrasings that fold onto the NEW resolution-fixes canonicals.
+  'mixed salad leaves': ['mixed salad leaf', 'bag of salad', 'bag of salad leaves', 'mixed leaf salad', 'baby salad leaves'],
+  'rice noodles': ['rice stick noodles', 'flat rice noodles', 'thin rice noodles', 'wide rice noodles', 'rice vermicelli noodles'],
+  flatbread: ['flat breads', 'middle eastern flatbread', 'turkish flatbread'],
+  'harissa paste': ['rose harissa paste'],
+  pesto: ['fresh pesto', 'green basil pesto', 'pot of pesto'],
+  edamame: ['edamame soya beans', 'frozen edamame', 'podded edamame'],
+  tea: ['english breakfast tea', 'strong black tea', 'cup of tea', 'builders tea'],
+  // — Gochujang already exists as a canonical; fold the "paste" phrasing on too.
+  gochujang: ['gochujang paste', 'korean chilli paste', 'korean chili paste'],
+}
+
 // Build the reverse index: any spelling -> UK canonical phrase (lower-cased).
 function buildIndex() {
   const idx = new Map()
@@ -196,6 +267,7 @@ function buildIndex() {
     PLURAL_SINGULAR,
     BRAND_TO_GENERIC,
     RECIPE_PHRASINGS,
+    RESOLUTION_FIXES,
   ]) {
     for (const [uk, others] of Object.entries(source)) {
       const ukKey = uk.toLowerCase()

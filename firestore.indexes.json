@@ -82,6 +82,69 @@
         { "fieldPath": "dietLabels", "arrayConfig": "CONTAINS" },
         { "fieldPath": "totalTimeMinutes", "order": "ASCENDING" }
       ]
+    },
+
+    {
+      "collectionGroup": "recipes",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "cuisine", "order": "ASCENDING" },
+        { "fieldPath": "dietLabels", "arrayConfig": "CONTAINS" },
+        { "fieldPath": "popularity", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "recipes",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "dietLabels", "arrayConfig": "CONTAINS" },
+        { "fieldPath": "healthLabels", "arrayConfig": "CONTAINS" },
+        { "fieldPath": "popularity", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "recipes",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "course", "order": "ASCENDING" },
+        { "fieldPath": "cuisine", "order": "ASCENDING" },
+        { "fieldPath": "popularity", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "recipes",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "healthLabels", "arrayConfig": "CONTAINS" },
+        { "fieldPath": "totalTimeMinutes", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "recipes",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "course", "order": "ASCENDING" },
+        { "fieldPath": "healthLabels", "arrayConfig": "CONTAINS" },
+        { "fieldPath": "totalTimeMinutes", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "recipes",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "cuisine", "order": "ASCENDING" },
+        { "fieldPath": "dietLabels", "arrayConfig": "CONTAINS" },
+        { "fieldPath": "totalTimeMinutes", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "recipes",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "course", "order": "ASCENDING" },
+        { "fieldPath": "dietLabels", "arrayConfig": "CONTAINS" },
+        { "fieldPath": "totalTimeMinutes", "order": "ASCENDING" }
+      ]
     }
   ],
   "fieldOverrides": []

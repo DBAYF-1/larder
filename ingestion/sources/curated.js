@@ -15,6 +15,7 @@ import { readdirSync } from 'node:fs'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { dirname, join } from 'node:path'
 import { slugify } from '../pipeline/resolve.js'
+import { canonicalCuisine, canonicalCourse } from './themealdb.js'
 import { loadImageCache, getCachedImage } from './foodImages.js'
 
 // Every .js in data/curated/ is a recipe set (mains, puddings, dinners, regional,
@@ -115,15 +116,25 @@ export function placeholderImage(title) {
  */
 export function mapCurated(recipe) {
   const title = (recipe.title || '').trim()
-  const course = recipe.course || 'Dinner'
+  // Normalise course to the CONTRACTS.md enum and cuisine to the canonical
+  // demonym vocabulary (roadmap #13) so curated content shares one taxonomy
+  // with TheMealDB and never fragments filters.
+  const course = canonicalCourse(recipe.course || 'Dinner')
+  const cuisine = canonicalCuisine(recipe.cuisine) || 'British'
   const dietLabels = Array.isArray(recipe.dietLabels) ? recipe.dietLabels.slice() : []
+  const healthLabels = Array.isArray(recipe.healthLabels) ? recipe.healthLabels.slice() : []
   const rawLines = (recipe.rawLines || []).map((l) => ({
     rawName: (l.rawName || '').trim(),
     rawMeasure: (l.rawMeasure || '').trim(),
   }))
 
-  // Prefer a real (deterministic, cached) Wikipedia photo; fall back to the
-  // on-brand SVG placeholder. A cached entry with a url => real photo + attribution.
+  // Image precedence (roadmap #21): a REAL source photo (cached Wikipedia) is
+  // the only thing curated provides here. We DO NOT emit an inline SVG data-URI
+  // placeholder any more — that blob shipped in every Firestore read and a
+  // generated photo could never override it. Instead emit imageUrl = null when
+  // there's no real photo, so buildRecipe.js can fall back to a generated photo
+  // (GENERATED_IMAGES[id]) and, failing that, the CLIENT renders its own
+  // placeholder at zero Firestore cost. A cached entry with a url => real photo.
   const cached = getCachedImage(title, IMAGE_CACHE)
   const realImage = cached && cached.url ? cached : null
 
@@ -131,17 +142,18 @@ export function mapCurated(recipe) {
     source: 'curated',
     sourceId: `curated-${slugify(title)}`,
     title,
-    imageUrl: realImage ? realImage.url : placeholderImage(title),
+    imageUrl: realImage ? realImage.url : null,
     imageAttribution: realImage ? realImage.attribution || null : null,
     attributionRequired: Boolean(realImage),
     sourceUrl: realImage?.pageUrl || '',
     instructions: (recipe.instructions || '').trim() || null,
     instructionsExternal: false,
     publisher: null,
-    cuisine: recipe.cuisine || 'British',
+    cuisine,
     course,
     category: course,
     dietLabels,
+    healthLabels,
     tags: [],
     youtubeUrl: null,
     // Extra fields the pipeline reads when present.

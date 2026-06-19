@@ -1,0 +1,127 @@
+name: ci
+
+# Larder CI gate (roadmap #9, #25, #40).
+#
+# This is the load-bearing quality gate: every push and pull request must build
+# the app and pass the test suite before anything ships. Two independent jobs:
+#
+#   app        — the React/Vite SPA. `npm ci` → `npm test` (the 88 vitest tests,
+#                including the 65 acceptance tests for buildShoppingList/format
+#                and the planQuery/index tests) → `npm run build`. These three
+#                steps are REQUIRED: a red test or a broken build fails the gate.
+#                Lint, typecheck and format run as non-blocking signals (the
+#                codebase still has pre-existing warnings; tightening them is a
+#                follow-up — see eslint.config.js / jsconfig.json).
+#
+#   ingestion  — the Node Admin-SDK pipeline that runs OFF Firebase. Installs its
+#                own pinned deps, runs the pure-stage tests with `node --test`
+#                (parse / resolve / normalise / backfill driver), and `node
+#                --check` parses every entry/lib/pipeline/source script so a
+#                syntax error in an ingestion file is caught here, not at 4am in
+#                the cron (ingest.yml).
+#
+# No Firebase credentials are needed: tests and build are fully offline. The live
+# Firestore read quota is irrelevant to CI.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# A newer commit on the same ref supersedes an in-flight run.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  # ── App: tests + build are the gate; lint/typecheck/format are signals ──────
+  app:
+    name: app (test + build)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      # REQUIRED — the 88 vitest tests (incl. the 65 buildShoppingList/format
+      # acceptance tests). A failure here fails the build.
+      - name: Run tests
+        run: npm test
+
+      # REQUIRED — the production build must succeed.
+      - name: Build
+        run: npm run build
+
+      # SIGNAL (non-blocking) — type-checks the JSDoc-annotated pure logic in
+      # src/lib + src/state via tsc --checkJs (roadmap #40).
+      - name: Typecheck (warn-only)
+        run: npm run typecheck
+        continue-on-error: true
+
+      # SIGNAL (non-blocking) — ESLint flat config (roadmap #40). Surfaces unused
+      # imports, hook-dependency issues, etc. Pre-existing warnings do not gate.
+      - name: Lint (warn-only)
+        run: npm run lint
+        continue-on-error: true
+
+      # SIGNAL (non-blocking) — Prettier formatting check.
+      - name: Format check (warn-only)
+        run: npm run format
+        continue-on-error: true
+
+  # ── Ingestion: pure-stage tests + syntax check of every script ──────────────
+  ingestion:
+    name: ingestion (node --test + syntax)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: ingestion/package-lock.json
+
+      - name: Install ingestion dependencies
+        working-directory: ingestion
+        run: npm ci
+
+      # REQUIRED — the pure pipeline-stage tests (parse / resolve / normalise)
+      # plus the quota-safe backfill-driver tests, all on node:test (no deps).
+      - name: Run ingestion tests
+        working-directory: ingestion
+        run: node --test pipeline/*.test.js lib/*.test.js
+
+      # REQUIRED — parse every entry / lib / pipeline / source script so a syntax
+      # error never reaches the nightly cron. `node --check` only parses; it does
+      # not execute, so no credentials or network are touched.
+      - name: Syntax-check ingestion scripts
+        working-directory: ingestion
+        run: |
+          set -euo pipefail
+          status=0
+          for f in \
+            ingest.js \
+            lib/*.js \
+            pipeline/*.js \
+            sources/*.js; do
+            # Skip test files (run above) and anything that does not exist.
+            case "$f" in
+              *.test.js) continue ;;
+            esac
+            [ -f "$f" ] || continue
+            echo "node --check $f"
+            node --check "$f" || status=1
+          done
+          exit $status

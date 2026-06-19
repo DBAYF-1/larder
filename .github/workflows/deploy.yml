@@ -1,0 +1,116 @@
+name: deploy
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Roadmap #9 (deploy half) / ops-security F2 — token-based CI deploy.
+#
+# WHAT THIS DOES
+#   On every push to `main` (and on manual dispatch) it builds the SPA and runs
+#   `firebase deploy --only hosting,firestore:indexes,firestore:rules`, so the
+#   live site, the committed composite indexes (roadmap #4), and the security
+#   rules are always in sync with `main`. This removes the drift-prone human
+#   `firebase login` from every critical path (ops-security F2): no more
+#   "indexes are committed but never deployed", no more manual hosting deploy
+#   after a CI image batch.
+#
+# ── ONE-TIME SETUP REQUIRED (the workflow no-ops cleanly until you do this) ────
+#   1. On your machine, logged in to the dbayft Google account, run:
+#          firebase login:ci
+#      It prints a long-lived CI token.
+#   2. In GitHub: repo → Settings → Secrets and variables → Actions →
+#      "New repository secret", name it exactly  FIREBASE_TOKEN , paste the token.
+#
+#   Until that secret exists, the deploy job is SKIPPED by the `if:` guard below
+#   (the run shows the job greyed-out, never red) — so adding this file changes
+#   nothing about today's behaviour and breaks no current flow.
+#
+# SECURITY NOTE
+#   A `firebase login:ci` token is a long-lived bearer credential — treat it as a
+#   high-value secret. It is read only from the encrypted GitHub secret and never
+#   echoed. A deploy-scoped service account (Firebase Hosting Admin + Firebase
+#   Rules Admin + Cloud Datastore Index Admin, via GOOGLE_APPLICATION_CREDENTIALS)
+#   is the more revocable long-term option; the token path is the simplest and is
+#   fully Spark-compatible.
+# ─────────────────────────────────────────────────────────────────────────────
+
+on:
+  push:
+    branches: [main]
+    paths:
+      # Only the things a deploy actually ships. Ingestion-only or docs-only
+      # commits don't trigger a (free but pointless) redeploy.
+      - 'src/**'
+      - 'public/**'
+      - 'index.html'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'vite.config.js'
+      - 'firebase.json'
+      - 'firestore.rules'
+      - 'firestore.indexes.json'
+      - '.github/workflows/deploy.yml'
+  workflow_dispatch:
+
+concurrency:
+  # One deploy at a time; a newer push to main supersedes an in-flight build.
+  group: deploy
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    # GUARD: the deploy only happens when the FIREBASE_TOKEN secret is configured.
+    # GitHub does not allow secrets in a job/workflow-level `if:`, so the gate is a
+    # first step that sets an output; every subsequent step is conditioned on it.
+    # Until the secret is added the build/deploy steps are all skipped — no red
+    # runs, no half-built deploys, no behaviour change from adding this file.
+    env:
+      FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+    steps:
+      - name: Check for deploy token
+        id: guard
+        run: |
+          if [ -z "$FIREBASE_TOKEN" ]; then
+            echo "FIREBASE_TOKEN secret is not set — skipping deploy."
+            echo "See the header of .github/workflows/deploy.yml for one-time setup."
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/checkout@v4
+        if: steps.guard.outputs.configured == 'true'
+
+      - uses: actions/setup-node@v4
+        if: steps.guard.outputs.configured == 'true'
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Install app deps (pinned)
+        if: steps.guard.outputs.configured == 'true'
+        run: npm ci
+
+      - name: Run tests (acceptance gate — buildShoppingList 65 tests)
+        if: steps.guard.outputs.configured == 'true'
+        run: npm test
+
+      - name: Build production bundle
+        if: steps.guard.outputs.configured == 'true'
+        run: npm run build
+
+      - name: Deploy hosting + indexes + rules
+        if: steps.guard.outputs.configured == 'true'
+        run: |
+          npx --yes firebase-tools@latest deploy \
+            --only hosting,firestore:indexes,firestore:rules \
+            --project larder-dbayft \
+            --non-interactive \
+            --force \
+            --token "$FIREBASE_TOKEN"
+
+      - name: Report skipped deploy
+        if: steps.guard.outputs.configured != 'true'
+        run: echo "::notice title=Deploy skipped::FIREBASE_TOKEN secret not set; nothing was deployed."

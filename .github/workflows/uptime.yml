@@ -1,0 +1,204 @@
+name: uptime
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Roadmap #1 / ops-security F1 + F3 — the AVAILABILITY OWNER.
+#
+# Larder's client reads Firestore directly, so when the ~50K reads/day Spark cap
+# is hit every read 429s and the catalogue is dark for ALL users until the UTC
+# day resets — and nothing today alerts on it. This scheduled probe makes that
+# failure LOUD and free:
+#
+#   Every ~25 minutes it unauthenticatedly curls the live Firestore REST reads a
+#   cold visitor depends on:
+#       facets/global         (filter bar)
+#       home/feed             (the pre-baked one-read home doc — roadmap #5;
+#                              absence is tolerated until that ships, see below)
+#       system/last_ingestion (data-freshness heartbeat)
+#
+#   The run FAILS (red) and opens-or-updates a single pinned GitHub issue when:
+#     • any read returns a non-200 status (429 RESOURCE_EXHAUSTED = quota burnt,
+#       403/5xx = outage/misconfig), OR
+#     • system/last_ingestion.finishedAt is older than ~36h (stale catalogue:
+#       the cron was auto-disabled, or has been failing — a case the in-run
+#       `if: failure()` on ingest.yml cannot catch).
+#
+#   When everything recovers, the issue is auto-closed with a green comment.
+#
+# OPTIONAL EXTRA ALERT CHANNEL
+#   If you add a repository secret named  ALERT_WEBHOOK  (a Slack/Discord/Telegram
+#   incoming-webhook URL), each new failure is also POSTed there as JSON. Without
+#   the secret the GitHub-issue alert is the (entirely free) sole channel.
+#
+# COST: GitHub-hosted Actions minutes on a public repo are free; the curls are
+# unauthenticated REST GETs (no Firestore SDK), so the probe itself costs at most
+# a couple of reads and never touches a billable path.
+# ─────────────────────────────────────────────────────────────────────────────
+
+on:
+  schedule:
+    # Every ~25 minutes (offset off :00 to dodge GitHub's top-of-hour backlog).
+    - cron: '7,32,57 * * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: uptime
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  issues: write
+
+env:
+  # Firestore REST base for the larder-dbayft (default) database.
+  FS_BASE: https://firestore.googleapis.com/v1/projects/larder-dbayft/databases/(default)/documents
+  # Heartbeat is considered STALE past this many hours (two missed daily ingests
+  # plus head-room; ingest.yml is daily after roadmap #35).
+  MAX_AGE_HOURS: '36'
+  ISSUE_TITLE: '[uptime] Larder is unreadable or stale'
+  ISSUE_LABEL: uptime
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Probe live Firestore reads + data freshness
+        id: probe
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -uo pipefail
+
+          fail_lines=""
+          add_fail() { fail_lines="${fail_lines}- ${1}"$'\n'; }
+
+          # ── 1. Status of each cold-path read ────────────────────────────────
+          # home/feed is the pre-baked one-read home doc (roadmap #5). Until that
+          # ships it returns 404 — which we MUST NOT treat as an outage. So 404 on
+          # home/feed is tolerated; any other non-200 there, and any non-200 on
+          # the two docs that already exist, is a failure.
+          probe_doc() {
+            doc_path="$1"      # e.g. facets/global
+            tolerate_404="$2"  # "yes" => 404 is OK (doc not created yet)
+            code=$(curl -s -o /tmp/body.json -w '%{http_code}' \
+              --max-time 25 "${FS_BASE}/${doc_path}" || echo "000")
+            echo "  ${doc_path} -> HTTP ${code}"
+            if [ "$code" = "200" ]; then
+              return 0
+            fi
+            if [ "$code" = "404" ] && [ "$tolerate_404" = "yes" ]; then
+              echo "    (404 tolerated — ${doc_path} not created yet)"
+              return 0
+            fi
+            if [ "$code" = "429" ]; then
+              add_fail "\`${doc_path}\` returned **HTTP 429 RESOURCE_EXHAUSTED** — the daily Firestore read quota is burnt; the catalogue is dark for all users until the UTC day resets."
+            else
+              add_fail "\`${doc_path}\` returned **HTTP ${code}** (expected 200)."
+            fi
+            return 1
+          }
+
+          probe_doc "facets/global" "no"           || true
+          probe_doc "home/feed" "yes"              || true
+
+          # ── 2. Freshness of the ingestion heartbeat ─────────────────────────
+          hb_code=$(curl -s -o /tmp/hb.json -w '%{http_code}' \
+            --max-time 25 "${FS_BASE}/system/last_ingestion" || echo "000")
+          echo "  system/last_ingestion -> HTTP ${hb_code}"
+          if [ "$hb_code" != "200" ]; then
+            if [ "$hb_code" = "429" ]; then
+              add_fail "\`system/last_ingestion\` returned **HTTP 429** — read quota exhausted (cannot check freshness)."
+            else
+              add_fail "\`system/last_ingestion\` returned **HTTP ${hb_code}** (expected 200)."
+            fi
+          else
+            # finishedAt is a Firestore timestampValue (RFC3339). Pull it out and
+            # compare to now. jq is preinstalled on ubuntu-latest runners.
+            finished=$(jq -r '.fields.finishedAt.timestampValue // empty' /tmp/hb.json)
+            if [ -z "$finished" ]; then
+              add_fail "\`system/last_ingestion\` is missing a \`finishedAt\` timestamp — cannot confirm the catalogue is fresh."
+            else
+              now_s=$(date -u +%s)
+              fin_s=$(date -u -d "$finished" +%s 2>/dev/null || echo 0)
+              if [ "$fin_s" -eq 0 ]; then
+                add_fail "\`system/last_ingestion.finishedAt\` (\`${finished}\`) could not be parsed."
+              else
+                age_h=$(( (now_s - fin_s) / 3600 ))
+                echo "  catalogue last ingested ${age_h}h ago (threshold ${MAX_AGE_HOURS}h)"
+                if [ "$age_h" -gt "${MAX_AGE_HOURS}" ]; then
+                  add_fail "Catalogue is **STALE**: last successful ingestion was \`${finished}\` (~${age_h}h ago, threshold ${MAX_AGE_HOURS}h). The cron may be auto-disabled or failing."
+                fi
+              fi
+            fi
+          fi
+
+          # ── 3. Verdict ───────────────────────────────────────────────────────
+          if [ -n "$fail_lines" ]; then
+            {
+              echo "failed=true"
+              echo 'detail<<__EOF__'
+              printf '%s' "$fail_lines"
+              echo '__EOF__'
+            } >> "$GITHUB_OUTPUT"
+            echo "::error title=Larder availability check failed::$(printf '%s' "$fail_lines" | tr '\n' ' ')"
+          else
+            echo "failed=false" >> "$GITHUB_OUTPUT"
+            echo "All cold-path reads are 200 and the catalogue is fresh."
+          fi
+
+      - name: Open or update the alert issue
+        if: steps.probe.outputs.failed == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DETAIL: ${{ steps.probe.outputs.detail }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          body=$(printf 'Larder failed its availability/freshness probe at %s UTC.\n\n%s\n\nProbe run: %s\n\n_Auto-managed by `.github/workflows/uptime.yml`; this issue is closed automatically when the next probe passes._' \
+            "$(date -u '+%Y-%m-%d %H:%M')" "$DETAIL" "$RUN_URL")
+
+          # Ensure the label exists (ignore "already exists").
+          gh label create "$ISSUE_LABEL" --color B60205 --description "Larder availability/freshness alerts" 2>/dev/null || true
+
+          existing=$(gh issue list --state open --label "$ISSUE_LABEL" \
+            --search "$ISSUE_TITLE in:title" --json number --jq '.[0].number // empty')
+
+          if [ -n "$existing" ]; then
+            echo "Updating existing alert issue #$existing"
+            gh issue comment "$existing" --body "$body"
+          else
+            echo "Opening new alert issue"
+            gh issue create --title "$ISSUE_TITLE" --label "$ISSUE_LABEL" --body "$body"
+          fi
+
+      - name: Post to optional webhook
+        if: steps.probe.outputs.failed == 'true' && secrets.ALERT_WEBHOOK != ''
+        env:
+          ALERT_WEBHOOK: ${{ secrets.ALERT_WEBHOOK }}
+          DETAIL: ${{ steps.probe.outputs.detail }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          text=$(printf 'Larder availability alert:\n%s\nRun: %s' "$DETAIL" "$RUN_URL")
+          payload=$(jq -n --arg t "$text" '{text: $t, content: $t}')
+          curl -s -X POST -H 'Content-Type: application/json' \
+            --max-time 25 -d "$payload" "$ALERT_WEBHOOK" || echo "webhook POST failed (non-fatal)"
+
+      - name: Auto-close the alert issue on recovery
+        if: steps.probe.outputs.failed == 'false'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          existing=$(gh issue list --state open --label "$ISSUE_LABEL" \
+            --search "$ISSUE_TITLE in:title" --json number --jq '.[0].number // empty')
+          if [ -n "$existing" ]; then
+            gh issue comment "$existing" --body "Recovered: all cold-path reads returned 200 and the catalogue is fresh as of $(date -u '+%Y-%m-%d %H:%M') UTC. Closing. (Probe run: ${RUN_URL})"
+            gh issue close "$existing"
+          fi
+
+      - name: Fail the run if the probe failed
+        if: steps.probe.outputs.failed == 'true'
+        run: |
+          echo "Availability/freshness probe failed — see the alert issue."
+          exit 1

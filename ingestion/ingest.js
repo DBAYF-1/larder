@@ -40,6 +40,7 @@ import {
 import { INGREDIENTS } from './data/ingredients.js'
 import { buildIngredientDocs } from './pipeline/ingredientsDoc.js'
 import { buildRecipeDoc } from './pipeline/buildRecipe.js'
+import { writeFeed, scanFeedRecipes } from './pipeline/buildFeed.js'
 import { buildIndex } from './pipeline/resolve.js'
 import { pullTheMealDb } from './sources/themealdb.js'
 import { fetchCurated } from './sources/curated.js'
@@ -51,6 +52,7 @@ import {
   tallyRecipe,
   writeFacets,
   scanLiveFacets,
+  buildGlobalFacets,
 } from './lib/facets.js'
 
 // ── Tuning (BACKFILL_PLAN §2, §6) ─────────────────────────────────────────────
@@ -221,6 +223,17 @@ async function runSinglePass(args) {
   await writeFacets(db, tally)
   log('facets/global + facets/diets updated.')
 
+  // Pre-bake the single-read home feed (roadmap #5/#6). Embed the facets summary
+  // built from THIS run's tally so the home needs no separate facets read. Never
+  // aborts the run on failure (writeFeed logs and swallows).
+  await writeFeed({
+    db,
+    recipeDocs,
+    facets: buildGlobalFacets(tally),
+    helpers: { contentHash, serverTimestamp },
+    log,
+  })
+
   await writeDoc(db, 'system/last_ingestion', {
     finishedAt: serverTimestamp(),
     source: args.source,
@@ -381,6 +394,23 @@ async function runMatrix(args) {
   const tally = await scanLiveFacets(db)
   await writeFacets(db, tally)
   log(`facets/global + facets/diets updated from live scan (${tally.total} recipes).`)
+
+  // Pre-bake the single-read home feed (roadmap #5/#6). This run only built a
+  // SLICE, so scan the whole live collection (projected to the feed fields) and
+  // assemble the feed from that. Embeds the facets summary from the live tally so
+  // the home needs no separate facets read. Never aborts the run on failure.
+  try {
+    const feedRecipes = await scanFeedRecipes(db)
+    await writeFeed({
+      db,
+      recipeDocs: feedRecipes,
+      facets: buildGlobalFacets(tally),
+      helpers: { contentHash, serverTimestamp },
+      log,
+    })
+  } catch (err) {
+    log(`home/feed: live scan FAILED (non-fatal): ${err && err.message ? err.message : err}`)
+  }
 
   // ── Heartbeat ───────────────────────────────────────────────────────────────
   await writeDoc(db, 'system/last_ingestion', {

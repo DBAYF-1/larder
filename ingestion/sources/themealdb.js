@@ -21,6 +21,101 @@
 
 const BASE = (key) => `https://www.themealdb.com/api/json/v1/${key}/`
 
+// ── Canonical taxonomy (roadmap #13) ──────────────────────────────────────────
+// De-duplicate cuisine and course values so filters don't fragment one cuisine
+// across two chips (France/French, India/Indian, Middle Eastern/Middle-Eastern,
+// American/United States) and so course always lands in the CONTRACTS.md enum
+// (Breakfast|Lunch|Dinner|Side|Dessert|Snack|Drink). Demonym house style.
+//
+// Exported so the curated adapter applies the SAME map (single source of truth).
+export const CUISINE_CANON = {
+  // country-name → demonym
+  france: 'French',
+  india: 'Indian',
+  italy: 'Italian',
+  spain: 'Spanish',
+  greece: 'Greek',
+  china: 'Chinese',
+  japan: 'Japanese',
+  thailand: 'Thai',
+  mexico: 'Mexican',
+  morocco: 'Moroccan',
+  egypt: 'Egyptian',
+  turkey: 'Turkish',
+  vietnam: 'Vietnamese',
+  portugal: 'Portuguese',
+  poland: 'Polish',
+  russia: 'Russian',
+  ukraine: 'Ukrainian',
+  croatia: 'Croatian',
+  ireland: 'Irish',
+  norway: 'Norwegian',
+  netherlands: 'Dutch',
+  holland: 'Dutch',
+  argentina: 'Argentine',
+  argentinian: 'Argentine',
+  venezuela: 'Venezuelan',
+  uruguay: 'Uruguayan',
+  uruguayan: 'Uruguayan',
+  canada: 'Canadian',
+  kenya: 'Kenyan',
+  malaysia: 'Malaysian',
+  philippines: 'Filipino',
+  tunisia: 'Tunisian',
+  // demonym/style spelling variants → canonical
+  'united states': 'American',
+  'united states of america': 'American',
+  usa: 'American',
+  us: 'American',
+  'saudi arabian': 'Saudi Arabian',
+  'saudi arabia': 'Saudi Arabian',
+  // Middle Eastern hyphen/space variants merged
+  'middle-eastern': 'Middle Eastern',
+  'middle eastern': 'Middle Eastern',
+  mideast: 'Middle Eastern',
+  persian: 'Persian',
+  'north african': 'North African',
+  unknown: null,
+}
+
+export const COURSE_CANON = {
+  breakfast: 'Breakfast',
+  brunch: 'Breakfast',
+  lunch: 'Lunch',
+  dinner: 'Dinner',
+  main: 'Dinner',
+  'main course': 'Dinner',
+  supper: 'Dinner',
+  side: 'Side',
+  'side dish': 'Side',
+  dessert: 'Dessert',
+  pudding: 'Dessert', // outside the enum → Dessert
+  sweet: 'Dessert',
+  snack: 'Snack',
+  starter: 'Snack', // outside the enum → Snack (per data-quality audit Finding 7)
+  appetiser: 'Snack',
+  appetizer: 'Snack',
+  drink: 'Drink',
+  beverage: 'Drink',
+  cocktail: 'Drink',
+}
+
+/** Normalise a raw cuisine string to the canonical demonym form (or null). */
+export function canonicalCuisine(raw) {
+  const s = String(raw || '').trim()
+  if (!s) return null
+  const mapped = CUISINE_CANON[s.toLowerCase()]
+  if (mapped !== undefined) return mapped
+  // Unknown cuisine: keep as written but Title-Cased for a tidy chip.
+  return s.replace(/\b\w/g, (c) => c.toUpperCase())
+}
+
+/** Normalise a raw course string to the CONTRACTS.md enum (default Dinner). */
+export function canonicalCourse(raw) {
+  const s = String(raw || '').trim().toLowerCase()
+  return COURSE_CANON[s] || 'Dinner'
+}
+
 // Minimum spacing between any two requests: ~5 req/s, inside the 60/10s budget.
 const REQUEST_SPACING_MS = 210
 
@@ -147,7 +242,12 @@ const COURSE_BY_CATEGORY = {
   Miscellaneous: 'Dinner',
 }
 
-const VEGETARIAN_CATEGORIES = new Set(['Vegetarian', 'Vegan', 'Dessert', 'Pasta', 'Side', 'Starter'])
+// TheMealDB category is only a HINT for diet now. We no longer auto-tag whole
+// categories (Pasta/Dessert/Side/Starter) Vegetarian — that shipped bacon
+// lasagne as "Vegetarian" (data-quality audit Finding 2). Vegetarian/Vegan are
+// derived and CROSS-CHECKED from resolved ingredients by verifyDiet.js; the
+// category hint below only seeds a CLAIM the verifier must still prove.
+const VEGETARIAN_CATEGORIES = new Set(['Vegetarian', 'Vegan'])
 const VEGAN_CATEGORIES = new Set(['Vegan'])
 
 /**
@@ -178,8 +278,8 @@ export function mapMeal(meal) {
     instructions: (meal.strInstructions || '').trim() || null,
     instructionsExternal: false,
     publisher: 'TheMealDB',
-    cuisine: area || null,
-    course: COURSE_BY_CATEGORY[category] || 'Dinner',
+    cuisine: canonicalCuisine(area),
+    course: canonicalCourse(COURSE_BY_CATEGORY[category] || 'Dinner'),
     category,
     dietLabels,
     tags,

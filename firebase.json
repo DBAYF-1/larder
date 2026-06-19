@@ -15,6 +15,19 @@
       {
         "source": "index.html",
         "headers": [{ "key": "Cache-Control", "value": "no-cache" }]
+      },
+      {
+        "comment": "Security headers (roadmap #20 / ops-security F10). Applied to EVERY response; the cache-control rules above still match their own globs and are merged in, so long-lived asset caching and the index.html no-cache are untouched. The CSP is REPORT-ONLY so it cannot break Google Fonts, Firestore reads, or wsrv.nl/TheMealDB images while we confirm it; switch the key to 'Content-Security-Policy' to enforce once the browser console shows no violations. Origins below are exactly the ones the app uses: Google Fonts (fonts.googleapis.com CSS + fonts.gstatic.com woff2), Firestore/Firebase (*.googleapis.com), and remote photos via wsrv.nl and www.themealdb.com (plus data: for the inline SVG placeholders).",
+        "source": "**",
+        "headers": [
+          { "key": "X-Content-Type-Options", "value": "nosniff" },
+          { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
+          { "key": "Permissions-Policy", "value": "accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()" },
+          {
+            "key": "Content-Security-Policy-Report-Only",
+            "value": "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https://wsrv.nl https://www.themealdb.com; connect-src 'self' https://*.googleapis.com https://firestore.googleapis.com; manifest-src 'self'; upgrade-insecure-requests"
+          }
+        ]
       }
     ]
   }

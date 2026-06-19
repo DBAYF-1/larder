@@ -4,17 +4,38 @@ name: ingest
 # network calls). GitHub-hosted runners have full internet, so the pipeline
 # runs here and writes to Firestore via the Admin SDK (service-account auth,
 # not a Cloud Function — the Spark outbound block never applies).
+#
+# Roadmap #35 (cron cost hygiene): the schedule is DAILY (was every 6h) and a
+# content-hash gate short-circuits redundant full re-ingests. The expensive part
+# of `--source all` is the full-corpus pull + the ~2,640-read diff against the
+# live collection; running it 4×/day burned read/write budget for almost no new
+# data. Daily keeps the catalogue fresh well inside the 36h staleness alarm
+# (uptime.yml) while roughly quartering the cron's quota footprint.
+#
+# CORRECTNESS IS PRESERVED. The gate only short-circuits a SCHEDULED run when the
+# ingestion transform (the code + curated data + ingredient dictionary that
+# decide every output doc) is byte-identical to the last successful scheduled
+# run. When it skips, it still writes the system/last_ingestion HEARTBEAT (so the
+# freshness monitor stays green and the catalogue is never falsely flagged stale).
+# A push that touches ingestion, or a manual dispatch, ALWAYS runs the full
+# `--source all` pass regardless of the gate — so any code/data change, and any
+# operator who wants a forced refresh, gets the full idempotent re-ingest.
 
 on:
   schedule:
-    # Every 6 hours, offset off the hour to dodge GitHub's peak-time delays.
-    - cron: '17 */6 * * *'
+    # Once a day, offset off the hour to dodge GitHub's peak-time delays.
+    - cron: '17 4 * * *'
   workflow_dispatch:
     inputs:
       limit:
         description: 'Optional per-run recipe-write cap (blank = default ~4200; small value = smoke test)'
         required: false
         default: ''
+      force:
+        description: 'Run the full re-ingest even if the source hash is unchanged'
+        required: false
+        type: boolean
+        default: true
   push:
     branches: [main]
     paths:
@@ -24,6 +45,10 @@ on:
 concurrency:
   group: ingest
   cancel-in-progress: false
+
+permissions:
+  contents: read
+  issues: write
 
 jobs:
   ingest:
@@ -35,11 +60,63 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Install ingestion deps
+      # ── Content-hash gate (roadmap #35) ─────────────────────────────────────
+      # Hash the ingestion transform inputs: every file under ingestion/ that is
+      # tracked in git EXCEPT generated/volatile outputs. This is what determines
+      # the docs we'd write; if it is unchanged AND this is a plain scheduled run,
+      # the only thing that could differ is upstream source content (caught by the
+      # next code change or a forced/dispatch run), so we skip the heavy pass.
+      - name: Compute source hash
+        id: hash
+        run: |
+          set -euo pipefail
+          src_hash=$(git ls-files ingestion \
+            | grep -v -E '^ingestion/(node_modules|data/generated-images\.json)' \
+            | sort \
+            | xargs sha256sum \
+            | sha256sum \
+            | cut -d' ' -f1)
+          echo "src_hash=$src_hash" >> "$GITHUB_OUTPUT"
+          echo "Ingestion source hash: $src_hash"
+
+      - name: Restore last-run source hash
+        id: cache
+        uses: actions/cache@v4
+        with:
+          path: .ingest-source-hash
+          # The cache key embeds the hash, so a hit means "we have already run a
+          # full ingest for exactly this source tree".
+          key: ingest-source-${{ steps.hash.outputs.src_hash }}
+
+      - name: Decide whether to run the full ingest
+        id: decide
+        env:
+          EVENT: ${{ github.event_name }}
+          FORCE: ${{ github.event.inputs.force }}
+          CACHE_HIT: ${{ steps.cache.outputs.cache-hit }}
+        run: |
+          set -euo pipefail
+          run="true"
+          reason="default"
+          if [ "$EVENT" = "schedule" ] && [ "$CACHE_HIT" = "true" ]; then
+            run="false"
+            reason="source hash unchanged on a scheduled run — short-circuiting the full re-ingest (heartbeat still written)"
+          elif [ "$EVENT" = "workflow_dispatch" ] && [ "$FORCE" = "false" ] && [ "$CACHE_HIT" = "true" ]; then
+            run="false"
+            reason="manual dispatch with force=false and source hash unchanged"
+          else
+            reason="$EVENT run (or source changed / force requested) — full --source all pass"
+          fi
+          echo "run=$run" >> "$GITHUB_OUTPUT"
+          echo "Decision: run=$run ($reason)"
+
+      - name: Install ingestion deps (pinned)
+        if: steps.decide.outputs.run == 'true'
         working-directory: ingestion
-        run: npm install
+        run: npm ci
 
       - name: Run ingestion
+        if: steps.decide.outputs.run == 'true'
         working-directory: ingestion
         env:
           FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
@@ -50,13 +127,59 @@ jobs:
           LIMIT: ${{ github.event.inputs.limit }}
         # --source all = full TheMealDB corpus + ALL curated sets (incl. every
         # per-diet set), with correct facets; the Edamam sampler skips cleanly
-        # without keys. Idempotent via contentHash diffing. SWITCH TO --source
-        # mega once EDAMAM_ID/EDAMAM_KEY secrets exist — mega adds the checkpointed
-        # diet×cuisine×mealType Edamam backfill (the 10K driver, spread across runs
-        # under the free 20K writes/day cap). --limit caps the run for a smoke test.
+        # without keys. Idempotent via contentHash diffing — unchanged docs cost
+        # nothing, so a full daily pass is cheap whenever the gate lets it run.
+        # SWITCH TO --source mega once EDAMAM_ID/EDAMAM_KEY secrets exist — mega
+        # adds the checkpointed diet×cuisine×mealType Edamam backfill (the 10K
+        # driver, spread across runs under the free 20K writes/day cap). --limit
+        # caps the run for a smoke test.
         run: |
           if [ -n "$LIMIT" ]; then
             node ingest.js --source all --limit "$LIMIT"
           else
             node ingest.js --source all
+          fi
+
+      # Persist the hash so the NEXT scheduled run for this exact source tree can
+      # short-circuit. Written only after a successful ingest so a failed run
+      # never poisons the gate into skipping.
+      - name: Record source hash for the gate
+        if: steps.decide.outputs.run == 'true'
+        run: echo "${{ steps.hash.outputs.src_hash }}" > .ingest-source-hash
+
+      # ── Heartbeat-only path when the gate short-circuits ────────────────────
+      # Even when we skip the heavy pass we refresh system/last_ingestion.finishedAt
+      # so the freshness monitor (uptime.yml, 36h threshold) stays green: the
+      # catalogue genuinely IS current — we just proved we had nothing new to do.
+      - name: Install ingestion deps for heartbeat (pinned)
+        if: steps.decide.outputs.run != 'true'
+        working-directory: ingestion
+        run: npm ci
+
+      - name: Write skip heartbeat
+        if: steps.decide.outputs.run != 'true'
+        working-directory: ingestion
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: node scripts/heartbeat.mjs --reason "source-unchanged"
+
+      # ── Failure alerting (ops-security F3) ──────────────────────────────────
+      # GitHub never emails on scheduled-run failure. Open/append a single issue
+      # so a broken ingest (bad SA token, TheMealDB outage, write-quota trip) is
+      # visible within hours instead of at the next user complaint.
+      - name: Alert on ingestion failure
+        if: failure()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          title='[ingest] Larder ingestion run failed'
+          gh label create ingest-failure --color B60205 --description "Failed ingestion runs" 2>/dev/null || true
+          body="Ingestion failed at $(date -u '+%Y-%m-%d %H:%M') UTC. Run: ${RUN_URL}"
+          existing=$(gh issue list --state open --label ingest-failure --search "$title in:title" --json number --jq '.[0].number // empty')
+          if [ -n "$existing" ]; then
+            gh issue comment "$existing" --body "$body"
+          else
+            gh issue create --title "$title" --label ingest-failure --body "$body"
           fi

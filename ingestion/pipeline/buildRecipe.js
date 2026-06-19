@@ -9,6 +9,8 @@ import { parseLine } from './parse.js'
 import { resolveCore, slugify } from './resolve.js'
 import { normaliseLine } from './normalise.js'
 import { isKnownUnit } from './units.js'
+import { deriveAllergens } from './allergens.js'
+import { verifyLabels } from './verifyDiet.js'
 
 // Generated dish photos (Pollinations, hosted on Firebase Hosting) keyed by
 // recipe id. These OVERRIDE the source imageUrl so a re-ingest never reverts a
@@ -67,86 +69,65 @@ function resolveName(candidates, index) {
   return lastMiss || resolveCore('', index)
 }
 
-// ── Allergen derivation ─────────────────────────────────────────────────────
-// Map canonical ingredient ids / foodGroups / name keywords to UK allergens.
-const ALLERGEN_BY_FOODGROUP = {
-  Fish: 'contains-fish',
-  Eggs: 'contains-egg',
-  Dairy: 'contains-milk',
-  Nuts: 'contains-nuts',
-}
-
-const ALLERGEN_KEYWORDS = [
-  { test: /(prawn|shrimp|crab|lobster|mussel|clam|scallop|squid|oyster)/i, allergen: 'contains-crustaceans' },
-  { test: /(milk|butter|cream|cheese|yoghurt|yogurt|parmesan|mozzarella)/i, allergen: 'contains-milk' },
-  { test: /\begg/i, allergen: 'contains-egg' },
-  { test: /(flour|bread|pasta|spaghetti|couscous|breadcrumb|wheat|barley|rye|cracker|pastry)/i, allergen: 'contains-gluten' },
-  { test: /(almond|walnut|cashew|pecan|hazelnut|pistachio|macadamia|brazil nut)/i, allergen: 'contains-nuts' },
-  { test: /(peanut)/i, allergen: 'contains-peanuts' },
-  { test: /(soy|soya|tofu|edamame|tamari)/i, allergen: 'contains-soya' },
-  { test: /(fish|salmon|cod|haddock|tuna|anchovy|anchovies|mackerel|sardine)/i, allergen: 'contains-fish' },
-  { test: /(sesame|tahini)/i, allergen: 'contains-sesame' },
-  { test: /(mustard)/i, allergen: 'contains-mustard' },
-  { test: /(celery)/i, allergen: 'contains-celery' },
-  { test: /(white wine|red wine|sherry|brandy|rum|beer|cider|lager)/i, allergen: 'contains-sulphites' },
-]
-
-function deriveAllergens(lines) {
-  const set = new Set()
-  for (const line of lines) {
-    const name = line.canonicalName || line.raw || ''
-    const group = line.foodGroup || ''
-    if (ALLERGEN_BY_FOODGROUP[group]) set.add(ALLERGEN_BY_FOODGROUP[group])
-    for (const { test, allergen } of ALLERGEN_KEYWORDS) {
-      if (test.test(name)) set.add(allergen)
-    }
-  }
-  return [...set].sort()
-}
-
-// ── Health (free-from) labels ───────────────────────────────────────────────
-// Derived from absence of an allergen group across the recipe. Conservative:
-// only assert a free-from label when we resolved enough of the recipe to trust
-// it (parseCompleteness gate applied by the caller via minResolvedForHealth).
-function deriveHealthLabels(allergens, dietLabels) {
-  const labels = new Set(dietLabels || [])
-  const has = (a) => allergens.includes(a)
-  if (!has('contains-gluten')) labels.add('Gluten-free')
-  if (!has('contains-milk')) labels.add('Dairy-free')
-  if (!has('contains-nuts') && !has('contains-peanuts')) labels.add('Nut-free')
-  if (!has('contains-egg')) labels.add('Egg-free')
-  if (!has('contains-fish') && !has('contains-crustaceans')) labels.add('Fish-free')
-  return [...labels].sort()
-}
-
 // ── Nutrition ───────────────────────────────────────────────────────────────
 // Sum CoFID-style per-100 profiles weighted by each resolved line's base
-// quantity, then divide by servings. Returns null if nothing resolved with a
-// profile (we never fabricate nutrition).
+// quantity, then divide by servings. We never fabricate nutrition.
+//
+// Roadmap #30 — COMPLETENESS:
+//   • count-based ingredients no longer silently contribute 0. When a count line
+//     has a KNOWN typical item weight (`perItemGrams`, the same declared constant
+//     normalise.js uses) we convert items→grams so eggs/apples/chicken-breasts
+//     count toward the total. This stops the systematic UNDER-statement called
+//     out in the data-quality audit (Finding 8).
+//   • we also return `completeness` = share of the recipe's "real" (non-staple)
+//     ingredient lines that actually contributed a nutrient profile, so the UI
+//     can label nutrition "approximate — based on N of M ingredients" or hide it
+//     below a threshold rather than showing a confidently-wrong low total.
+//
+// Returns { nutrition: {energyKcal,…}|null, completeness: number }.
 function deriveNutrition(lines, servings) {
   const totals = { energyKcal: 0, proteinG: 0, fatG: 0, carbsG: 0 }
-  let any = false
+  let contributing = 0
+  let realLines = 0
   for (const line of lines) {
+    if (line.staple) continue // staples are excluded from the maths by contract
+    realLines++
     if (line.resolutionStatus !== 'resolved') continue
-    if (line.staple) continue
     const profile = line.nutrientProfilePer100
     const qty = line.quantityInBaseUnit
     if (!profile || qty == null || !(qty > 0)) continue
-    if (line.baseUnit === 'count') continue // profiles are per-100g/ml, not per item
-    const factor = qty / 100
+
+    // Convert the base quantity into GRAMS-equivalent for the per-100 maths.
+    // g/ml are already per-100 compatible; a count is converted via the declared
+    // perItemGrams (a known constant — NOT a fabricated density), else skipped.
+    let grams = null
+    if (line.baseUnit === 'g' || line.baseUnit === 'ml') {
+      grams = qty
+    } else if (line.baseUnit === 'count' && line.perItemGrams > 0) {
+      grams = qty * line.perItemGrams
+    }
+    if (grams == null || !(grams > 0)) continue
+
+    const factor = grams / 100
     totals.energyKcal += (profile.energyKcal || 0) * factor
     totals.proteinG += (profile.proteinG || 0) * factor
     totals.fatG += (profile.fatG || 0) * factor
     totals.carbsG += (profile.carbsG || 0) * factor
-    any = true
+    contributing++
   }
-  if (!any) return null
+
+  const completeness = realLines > 0 ? round2(contributing / realLines) : 0
+  if (contributing === 0) return { nutrition: null, completeness }
+
   const s = servings && servings > 0 ? servings : 1
   return {
-    energyKcal: Math.round(totals.energyKcal / s),
-    proteinG: Math.round((totals.proteinG / s) * 10) / 10,
-    fatG: Math.round((totals.fatG / s) * 10) / 10,
-    carbsG: Math.round((totals.carbsG / s) * 10) / 10,
+    nutrition: {
+      energyKcal: Math.round(totals.energyKcal / s),
+      proteinG: Math.round((totals.proteinG / s) * 10) / 10,
+      fatG: Math.round((totals.fatG / s) * 10) / 10,
+      carbsG: Math.round((totals.carbsG / s) * 10) / 10,
+    },
+    completeness,
   }
 }
 
@@ -220,31 +201,65 @@ export function buildRecipeDoc(src, index) {
       optional,
       staple,
       displayOrder: displayOrder++,
-      // carried for allergen/nutrition derivation, then stripped from the doc
+      // carried for allergen/diet/nutrition derivation, then stripped from the doc
       foodGroup: ingredient?.foodGroup || null,
       nutrientProfilePer100: ingredient?.nutrientProfilePer100 || null,
+      perItemGrams: ingredient?.perItemGrams || null,
     })
   }
 
   const parseCompleteness = resolvable > 0 ? round2(resolved / resolvable) : 0
+
+  // ── Allergens (roadmap #8) ──────────────────────────────────────────────────
   const allergens = deriveAllergens(lines)
 
-  const dietLabels = src.dietLabels || []
-  // Only trust derived free-from labels for well-resolved recipes.
-  const healthLabels =
-    parseCompleteness >= 0.7
-      ? deriveHealthLabels(allergens, [])
-      : (src.healthLabels || [])
+  // ── Diet + free-from verification (roadmap #7) ──────────────────────────────
+  // PROVE-OR-OMIT: derive Vegetarian/Vegan/Pescatarian and every free-from label
+  // from the resolved lines and BLOCK any label that is (a) sitting on an
+  // unresolved line or (b) contradicted by an ingredient. The source-provided
+  // dietLabels + healthLabels are treated only as CLAIMS the verifier must prove;
+  // curated hand tags get no free pass. Lifestyle labels we can't prove from
+  // ingredients (High-protein, Keto, Mediterranean, Low-carb, Kosher…) pass
+  // through unchanged.
+  const claimedLabels = [
+    ...new Set([...(src.dietLabels || []), ...(src.healthLabels || [])]),
+  ]
+  const verified = verifyLabels({ lines, allergens, claimedLabels })
 
-  const nutritionPerServing =
+  const dietLabels = verified.dietLabels
+  // Free-from health labels are the proven ones; lifestyle pass-through labels
+  // ride alongside in healthLabels (the field the free-from filters read).
+  const healthLabels = [
+    ...new Set([...verified.healthLabels, ...verified.passthroughLabels]),
+  ].sort()
+
+  // ── Nutrition + completeness (roadmap #30) ──────────────────────────────────
+  const sourceNutrition =
     src.nutritionPerServing && Number.isFinite(src.nutritionPerServing.energyKcal)
       ? src.nutritionPerServing
-      : deriveNutrition(lines, servingsBase)
+      : null
+  const derived = deriveNutrition(lines, servingsBase)
+  const nutritionPerServing = sourceNutrition || derived.nutrition
+  // Source nutrition (e.g. Edamam) is treated as fully complete; otherwise expose
+  // the derived share so the UI can label "approximate" or hide below a threshold.
+  const nutritionCompleteness = sourceNutrition ? 1 : derived.completeness
+
+  // ── Search tokens (roadmap #22-data) ────────────────────────────────────────
+  // Lowercased unique tokens from the title PLUS the resolved canonical names,
+  // for a cheap array-contains client search.
+  const searchTokens = buildSearchTokens(src.title, lines)
+
+  // ── Image precedence (roadmap #21) ──────────────────────────────────────────
+  // A REAL source photo must WIN over a generated one; emit null (not an inline
+  // SVG data-URI) for placeholders so the client renders its own fallback at zero
+  // Firestore byte-cost. Precedence: source photo → generated → null.
+  const id = recipeId(src)
+  const imageUrl = src.imageUrl || GENERATED_IMAGES[id] || null
 
   // Strip the helper fields off the stored lines.
-  const storedLines = lines.map(({ foodGroup, nutrientProfilePer100, ...keep }) => keep)
-
-  const id = recipeId(src)
+  const storedLines = lines.map(
+    ({ foodGroup, nutrientProfilePer100, perItemGrams, ...keep }) => keep,
+  )
 
   const data = {
     id,
@@ -252,7 +267,7 @@ export function buildRecipeDoc(src, index) {
     source: src.source,
     sourceId: String(src.sourceId),
     sourceUrl: src.sourceUrl || '',
-    imageUrl: GENERATED_IMAGES[id] || src.imageUrl || '',
+    imageUrl,
     imageAttribution: src.imageAttribution ?? null,
     instructions: src.instructions ?? null,
     instructionsExternal: Boolean(src.instructionsExternal),
@@ -265,6 +280,8 @@ export function buildRecipeDoc(src, index) {
     healthLabels,
     allergens,
     nutritionPerServing,
+    nutritionCompleteness,
+    searchTokens,
     attributionRequired: src.attributionRequired ?? src.source === 'edamam',
     popularity: seedPopularity(src, parseCompleteness),
     parseCompleteness,
@@ -272,6 +289,42 @@ export function buildRecipeDoc(src, index) {
   }
 
   return { id, data }
+}
+
+// Build the searchTokens array: lowercased, de-accented, unique tokens from the
+// title plus every resolved line's canonicalName. Deterministic + sorted so the
+// contentHash is stable across runs. Stop-words and pure-number tokens dropped.
+const SEARCH_STOPWORDS = new Set([
+  'and', 'the', 'with', 'of', 'a', 'an', 'in', 'on', 'to', 'for', 'or',
+])
+
+function buildSearchTokens(title, lines) {
+  const set = new Set()
+  const add = (text) => {
+    for (const tok of tokenise(text)) {
+      if (tok.length < 2) continue
+      if (SEARCH_STOPWORDS.has(tok)) continue
+      if (/^\d+$/.test(tok)) continue
+      set.add(tok)
+    }
+  }
+  add(title)
+  for (const line of lines) {
+    if (line.resolutionStatus === 'resolved' && line.canonicalName) {
+      add(line.canonicalName)
+    }
+  }
+  return [...set].sort()
+}
+
+function tokenise(text) {
+  return String(text || '')
+    .toLowerCase()
+    .normalize('NFKD')
+    .replace(/[̀-ͯ]/g, '') // strip accents
+    .replace(/['’]/g, '')
+    .split(/[^a-z0-9]+/)
+    .filter(Boolean)
 }
 
 function recipeId(src) {
@@ -289,4 +342,4 @@ function round2(n) {
   return Math.round(n * 100) / 100
 }
 
-export { deriveAllergens, deriveHealthLabels, deriveNutrition }
+export { deriveAllergens, deriveNutrition, buildSearchTokens }
